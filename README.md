@@ -25,27 +25,12 @@ See `PERT_PLAN.md` for the Gall's Law implementation schedule.
 | 0014 | Wire format — bit-crushed binary frames | full |
 | 0015 | Web client — Discord-like slash commands | mvp |
 | 0016 | World output (C structs) | mvp |
-| 0017 | TPC-C scaling | mvp |
-| 0018 | Zonefabric scaling | mvp |
-| 0019 | AssetcDN scaling | mvp |
-| 0020 | Cassie scaling | mvp |
-| 0021 | Actor-lite worker pool architecture | mvp |
-| 0022 | FoundationDB selection over CockroachDB | mvp |
-| 0023 | h2o TFB reference implementation reuse | mvp |
-| 0024 | Three-layer verification strategy | mvp |
-| 0025 | TPC-C keyspace design for FoundationDB | mvp |
-| 0026 | Binary value encoding for FDB | mvp |
-| 0027 | Async FDB callback chain for TPC-C transactions | mvp |
-| 0028 | TPC-C data loader design | mvp |
-| 0029 | Benchmark harness endpoint and transaction mix | mvp |
-| 0030 | CI/CD pipeline design | mvp |
-| 0031 | TechEmpower benchmark implementation | someday |
-| 0032 | zstd compression for FDB values | mvp |
-| 0033 | Slotmap entity storage | mvp |
-| 0034 | Macaroon + eBPF/XDP security fabric | someday |
-| 0035 | Plausible-witness-dag for MMO feature ablation | someday |
-| 0036 | PERT critical path for zonefabric implementation | mvp |
-| 0037 | CrucibleBench MUD ablation | mvp |
+| 0018 | Zonefabric scaling (reference) | mvp |
+| 0021 | Actor-lite worker pool (reference) | mvp |
+| 0022 | FDB selection (reference) | mvp |
+| 0025 | FDB keyspace design (reference) | mvp |
+| 0032 | Zstd compression (reference) | mvp |
+| 0033 | Slotmap entity storage (reference) | mvp |
 
 ## Scenarios
 
@@ -53,8 +38,10 @@ See `PERT_PLAN.md` for the Gall's Law implementation schedule.
 |------|----------|-------------|
 | `priv/scenarios/middleham.ex` | Middleham | 12 rooms, 4 NPCs, trust/suspicion system, 2 objectives |
 
-Each scenario is a Taskweft DSL domain defining the room graph, NPC
-state, items, and objective decompositions.
+## Implementation
 
-See `rfd/XXXX/README.md` for each RFD document.  Implementation schedule
-at `PERT_PLAN.md`.  Benchmark code at `h2o-bench-tpcc/`.
+- `h2o-bench-tpcc/` — benchmark code: SPSC ring, worker pool, main.c
+- `vendor/h2o/` — vendored libh2o source (git subtree)
+- `priv/scenarios/` — scenario definitions (Taskweft DSL)
+
+See `rfd/XXXX/README.md` for each RFD document.

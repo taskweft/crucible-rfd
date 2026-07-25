@@ -15,7 +15,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo -S -p '' apt-get update -qq
-          sudo -S -p '' apt-get install -y -qq cmake gcc libssl-dev libyajl-dev libz-dev make pkg-config
+          sudo -S -p '' apt-get install -y -qq cmake gcc libssl-dev libz-dev make pkg-config
 
       - name: Install FoundationDB C client
         run: |

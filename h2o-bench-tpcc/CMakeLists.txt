@@ -2,18 +2,15 @@ cmake_minimum_required(VERSION 3.18.0)
 project(crucible-demo)
 
 find_library(H2O_LIB h2o-evloop REQUIRED)
-find_library(YAJL_LIB yajl REQUIRED)
-find_library(Z_LIB z REQUIRED)
 find_library(SSL_LIB ssl REQUIRED)
 find_library(CRYPTO_LIB crypto REQUIRED)
 find_library(FDB_C_LIB fdb_c REQUIRED)
 
 find_path(H2O_INCLUDE h2o.h REQUIRED)
-find_path(YAJL_INCLUDE yajl/yajl_gen.h REQUIRED)
 find_path(OPENSSL_INCLUDE openssl/ssl.h REQUIRED)
 find_path(FDB_INCLUDE foundationdb/fdb_c.h REQUIRED)
 
-include_directories(src ${CMAKE_BINARY_DIR} ${H2O_INCLUDE} ${YAJL_INCLUDE} ${OPENSSL_INCLUDE} ${FDB_INCLUDE} ${CMAKE_SOURCE_DIR}/src)
+include_directories(src ${CMAKE_BINARY_DIR} ${H2O_INCLUDE} ${OPENSSL_INCLUDE} ${FDB_INCLUDE})
 
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -27,6 +24,6 @@ file(GLOB SOURCES "src/*.c")
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} ${COMMON_OPTIONS})
-target_link_libraries(${PROJECT_NAME} ${H2O_LIB} ${FDB_C_LIB} ${SSL_LIB} ${CRYPTO_LIB} ${YAJL_LIB} ${Z_LIB} m)
+target_link_libraries(${PROJECT_NAME} ${H2O_LIB} ${FDB_C_LIB} ${SSL_LIB} ${CRYPTO_LIB} m)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
