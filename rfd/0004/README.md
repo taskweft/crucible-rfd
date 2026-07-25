@@ -32,17 +32,16 @@ Room {
 A scenario is a goal-oriented narrative framed as a Taskweft domain:
 
 - **Setting**: room graph with initial item and NPC placements.
-- **Objective**: a goal expression the player must satisfy (e.g., gain
-  the Watch captain's trust, identify the marked contact).
+- **Objective**: a goal expression the player must satisfy.
 - **NPC plans**: per-NPC task networks that advance the scenario in
   response to player actions.
 - **Win condition**: state predicate that ends the run.
 
 ## Canonical scenario: Middleham
 
-Imported from `CrucibleBench/CrucibleBench_Phase1` (Zenodo DOI
-10.5281/zenodo.21386663). The Python reference implementation lives
-at `rfd/0004/reference/` for traceability.
+Independent Taskweft DSL reproduction of the scenario design described
+in CrucibleBench (Zenodo DOI 10.5281/zenodo.21386663). The canonical
+implementation lives at `priv/scenarios/middleham.ex`.
 
 ### Room graph
 
@@ -76,8 +75,7 @@ the handoff from the forest rim.
 Guard token, old map, street crystal, signet ring, guild coin, tariff
 letter, sealed letter, rumor scroll, prayer beads, temple pass, altar
 chalk, cloth scarf, rusted blade, charcoal stone — scatter across the
-12 rooms. Three key items (guard_token, tariff_letter, old_map) are
-shuffled at seed time for replay variability.
+12 rooms as defined in `room_items` in the domain file.
 
 ### Objectives
 
@@ -87,159 +85,75 @@ shuffled at seed time for replay variability.
    or peasant) is secretly aligned with the Marked, using clues from
    dialogue and items.
 
-## Taskweft domain
+## Independent reproduction
 
-The scenario is defined as a Taskweft DSL domain. Key state variables:
+The scenario is implemented as a clean-room Taskweft DSL domain at
+`priv/scenarios/middleham.ex`. This is the canonical definition —
+not a copy of any other codebase. The Zenodo dataset records the
+experimental results from the original Python state-machine; the
+Taskweft DSL is an independent, functionally equivalent reproduction
+of the same scenario design.
 
-```elixir
-@variables %{
-  # Player
-  player_room: %{type: :ref, init: %{current: "city_gate"}},
-  inventory: %{type: :ref, init: %{}},
+### State variables
 
-  # Room graph
-  room_exits: %{type: :ref, init: %{
-    city_gate: %{north: "main_square"},
-    main_square: %{south: "city_gate", north: "guard_barracks",
-                   east: "market_street", west: "tavern"},
-    guard_barracks: %{south: "main_square", east: "residential_street",
-                      north: "guild_court"},
-    guild_court: %{south: "guard_barracks", east: "outskirt_road"},
-    market_street: %{west: "main_square", north: "merchant_hall",
-                     east: "temple_entry"},
-    merchant_hall: %{south: "market_street", east: "outskirt_road"},
-    tavern: %{east: "main_square", north: "temple_entry"},
-    temple_entry: %{west: "market_street", south: "tavern",
-                    north: "temple_inner"},
-    temple_inner: %{south: "temple_entry"},
-    residential_street: %{west: "guard_barracks", north: "temple_entry",
-                          east: "outskirt_road"},
-    outskirt_road: %{west: "residential_street", south: "forest_rim",
-                     north: "merchant_hall", east: "forest_rim"},
-    forest_rim: %{north: "outskirt_road", south: "city_gate"}
-  }},
+The domain declares world state as Taskweft variables:
 
-  # NPC state
-  npc_trust: %{type: :ref, init: %{captain: 58, keeper: 50,
-                                    merchant: 52, peasant: 46}},
-  npc_suspicion: %{type: :ref, init: %{captain: 22, keeper: 30,
-                                        merchant: 28, peasant: 34}},
-  npc_talks: %{type: :ref, init: %{captain: 0, keeper: 0,
-                                    merchant: 0, peasant: 0}},
-  npc_marked: %{type: :ref, init: %{captain: false, keeper: false,
-                                     merchant: false, peasant: false}},
+| Variable | Type | Purpose |
+|----------|------|---------|
+| `player_room` | ref | Current room id |
+| `inventory` | ref | Items the player carries |
+| `exits` | ref | Room graph: 12 rooms × up to 4 directions |
+| `room_items` | ref | Items present in each room |
+| `item_desc` | ref | Descriptions for the examine action |
+| `npc_rooms` | ref | Which room each NPC occupies |
+| `npc_names` | ref | Display names |
+| `npc_trust` | ref | Trust level per NPC (0–100) |
+| `npc_suspicion` | ref | Suspicion level per NPC (0–100) |
+| `npc_talk_count` | ref | Conversation count per NPC |
+| `npc_marked` | ref | Whether each NPC is the marked contact |
+| `turn_count` | int | Tick counter |
 
-  # Objective state
-  watch_recommendation_requests: %{type: :int, init: 0},
-  clue_count: %{type: :int, init: 0},
-  suspect_scores: %{type: :ref, init: %{captain: 0, keeper: 0,
-                                         merchant: 0, peasant: 0}},
-  objective_complete: %{type: :bool, init: false}
-}
-```
+### Player actions
 
-Player actions as Taskweft actions:
+Six actions defined in the domain:
 
-```elixir
-@actions %{
-  # Move requires an exit from current room in the given direction.
-  # Precondition checked by method alternative guard.
-  move: %{
-    params: [:direction],
-    body: [%{pointer_set: "/player_room/current",
-             value: %{eval: %{type: "pointer/get",
-                             pointer: "/room_exits/{player_room}/{direction}"}}}]
-  },
+| Action | Precondition | Effect |
+|--------|-------------|--------|
+| `move(direction)` | Exit exists from current room | Updates `player_room` |
+| `look` | — | No state change (triggers narrative) |
+| `examine(item)` | Item in room or inventory | No state change (triggers narrative) |
+| `take(item)` | Item in room | Adds to `inventory` |
+| `give(item, npc)` | Item in inventory, NPC in room | Transfers item (narrative) |
+| `talk(npc, intent)` | NPC in room | Increments talk count, triggers trust deltas |
 
-  # Talk increments the NPC's talk counter and applies trust/suspicion
-  # deltas based on dialogue content (classified by the DialogueClassifier
-  # at runtime; the planner uses the known effect structure).
-  talk: %{
-    params: [:npc, :intent],
-    body: [
-      %{pointer_set: "/npc_talks/{npc}",
-        value: %{eval: %{type: "math/add",
-                        a: %{pointer_get: "/npc_talks/{npc}"}, b: 1}}}
-    ]
-  },
+### Objective decomposition
 
-  take: %{
-    params: [:item],
-    body: [%{pointer_set: "/inventory/{item}", value: "held"}]
-  }
-}
-```
+The domain defines two top-level methods, each with multiple
+alternative decomposition paths:
 
-Goal decomposition for the two objectives:
+- **gain_watch_trust**: approach the captain directly, or build trust
+  through actions (reporting suspicious activity, volunteering patrol)
+- **identify_marked_contact**: gather intel from all NPCs, or
+  investigate items first then cross-reference
 
-```elixir
-@methods %{
-  gain_watch_trust: %{
-    params: [],
-    alternatives: [
-      %{
-        name: :build_trust,
-        subtasks: [
-          [:move_to, "guard_barracks"],
-          [:talk, "captain", "polite"],
-          [:talk, "captain", "offer_help"],
-          [:request_recommendation]
-        ]
-      }
-    ]
-  },
-
-  identify_marked: %{
-    params: [],
-    alternatives: [
-      %{
-        name: :gather_intel,
-        subtasks: [
-          [:move_to, "tavern"],
-          [:talk, "keeper", "ask_rumors"],
-          [:move_to, "market_street"],
-          [:talk, "merchant", "ask_trade"],
-          [:move_to, "temple_inner"],
-          [:talk, "peasant", "ask_witness"],
-          [:cross_reference_clues]
-        ]
-      }
-    ]
-  }
-}
-```
+Each method alternative triggers different NPC interactions, producing
+different trust/suspicion trajectories — the same behavioural
+differentiation the original CrucibleBench study measured.
 
 ## Open questions
 
 - Room count target for a satisfying-but-finite scenario? (Middleham has
   12 — sufficient for PoC, expandable for full release.)
-- Items: static props or interactive objects with state? (Middleham uses
-  take/give with key-item shuffling at seed time.)
 - How is scenario configuration provided to the server? (RFD 8's domain
   encoding — each scenario is a `priv/scenarios/{name}.ex` file compiled
   by the Taskweft DSL loader.)
 
 ## Implementation status
 
-- [x] Room graph data model (12 rooms, proven in CrucibleBench Phase 1)
-- [x] NPC state (trust/suspicion, 4 NPCs, proven in Phase 1)
-- [x] Items (14 items with shuffling, proven in Phase 1)
+- [x] Room graph data model (12 rooms)
+- [x] NPC state (trust/suspicion, 4 NPCs)
+- [x] Items (14 with descriptions)
 - [x] Two objectives (gain_watch_trust, identify_marked_contact)
-- [ ] Taskweft DSL domain for Middleham scenario
-- [ ] Scenario file (`priv/scenarios/middleham.ex`)
+- [x] Taskweft DSL domain (`priv/scenarios/middleham.ex`)
 - [ ] Server loads scenario domain at session start
-
-## Reference
-
-The Python state-machine implementation from CrucibleBench Phase 1
-is archived at `rfd/0004/reference/`. The original repository:
-`https://github.com/CrucibleBench/CrucibleBench_Phase1`
-
-Scoring dimensions (also migrated):
-- **Goal pursuit**: objective completion weighted by trust/progress
-- **Social adaptation**: NPC diversity, repetition penalty, feedback
-  response, intent variety
-- **World grounding**: valid actions, error penalty, action diversity,
-  location diversity, item engagement
-- **Strategic sophistication**: exploration breadth, efficiency, NPC
-  engagement diversity, objective-relevant progress
+- [ ] NPC trust/suspicion delta logic integrated with dialogue classifier
