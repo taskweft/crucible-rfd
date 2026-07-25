@@ -2,30 +2,27 @@ FROM buildpack-deps:26.04 AS compile
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -qq && apt-get install --no-install-recommends -qqy \
-      cmake gcc libssl-dev libyajl-dev libz-dev make pkg-config
+      cmake gcc libssl-dev libz-dev make pkg-config
 
-# Build libh2o
-ARG H2O_VERSION=ccea64b17ade832753db933658047ede9f31a380
-WORKDIR /tmp/h2o-build
-RUN curl -LSs "https://github.com/h2o/h2o/archive/${H2O_VERSION}.tar.gz" | \
-      tar --strip-components=1 -xz && \
-    cmake -B build -DCMAKE_BUILD_TYPE=Release \
+# Build libh2o from vendored source
+COPY vendor/h2o /tmp/h2o
+RUN cmake -B /tmp/h2o/build -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_C_FLAGS="-flto=auto -march=x86-64-v3 -mtune=generic" \
-      -DWITH_MRUBY=off -S . && \
-    cmake --build build -j$(nproc) && cmake --install build
+      -DWITH_MRUBY=off -DWITH_UV=off -S /tmp/h2o && \
+    cmake --build /tmp/h2o/build -j$(nproc) && cmake --install /tmp/h2o/build
 
-# Install FDB client headers + lib for compilation
+# Install FDB client for compilation
 ARG FDB_VERSION=7.3.79
 RUN curl -LSs "https://github.com/apple/foundationdb/releases/download/${FDB_VERSION}/foundationdb-clients_${FDB_VERSION}-1_amd64.deb" -o /tmp/fdb.deb && \
     dpkg -i /tmp/fdb.deb && rm /tmp/fdb.deb
 
 # Build crucible-demo
 WORKDIR /tmp/build
-COPY . .
-RUN cmake -B build -DCMAKE_BUILD_TYPE=Release -S h2o-bench-tpcc && \
+COPY h2o-bench-tpcc/ .
+RUN cmake -B build -DCMAKE_BUILD_TYPE=Release -S . && \
     cmake --build build -j$(nproc)
 
-# Install wrk for benchmarking
+# Install wrk
 RUN git clone --depth=1 https://github.com/wg/wrk.git /tmp/wrk && \
     cd /tmp/wrk && make -j && cp wrk /usr/local/bin/
 
@@ -34,7 +31,7 @@ FROM ubuntu:26.04
 
 ARG FDB_VERSION=7.3.79
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -qqy libssl3 libyajl2 curl ca-certificates adduser && \
+    apt-get install --no-install-recommends -qqy libssl3 curl ca-certificates adduser && \
     curl -LSs "https://github.com/apple/foundationdb/releases/download/${FDB_VERSION}/foundationdb-clients_${FDB_VERSION}-1_amd64.deb" -o /tmp/fdb-client.deb && \
     dpkg -i /tmp/fdb-client.deb && \
     curl -LSs "https://github.com/apple/foundationdb/releases/download/${FDB_VERSION}/foundationdb-server_${FDB_VERSION}-1_amd64.deb" -o /tmp/fdb-server.deb && \
