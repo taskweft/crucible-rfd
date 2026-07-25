@@ -23,7 +23,7 @@ flowchart LR
     r3 --> r7[RFD 7<br>Slash protocol<br>6h]
     r5 --> r10[RFD 10<br>Bandwidth alloc<br>8h]
     r6 --> r8[RFD 8<br>NPC domain<br>12h]
-    r6 --> r11[RFD 11<br>State - FDB<br>8h]
+    r6 --> r11[RFD 11<br>State - FDB<br>linear scaling<br>8h]
     r7 --> r14[RFD 14<br>Wire format<br>10h]
     r7 --> r16[RFD 16<br>World output<br>4h]
     r8 --> r9[RFD 9<br>Evaluation<br>8h]
@@ -65,8 +65,8 @@ gantt
     RFD 6 — Architecture (full)   :crit, r6, after r3, 1.5d
 
     section State
-    RFD 11 — State — FDB          :r11, after r6, 1d
-    RFD 13 — FDB schema (full)    :r13, after r11, 1d
+    RFD 11 — State — FDB (linear-scaling KV)  :r11, after r6, 1d
+    RFD 13 — FDB schema — linear-scaling key layout    :r13, after r11, 1d
 
     section NPC / Planning
     RFD 8 — NPC domain (full)     :crit, r8, after r6, 1.5d
@@ -96,9 +96,9 @@ gantt
 | 8 | NPC domain — Taskweft | 12 | full | ✓ | 6 |
 | 9 | Evaluation scoring | 8 | someday | — | 8 |
 | 10 | Bandwidth allocation | 8 | someday | — | 5 |
-| 11 | State layer — FoundationDB | 8 | mvp | — | 6 |
+| 11 | State — FDB (linear-scaling KV) | 8 | mvp | — | 6 |
 | 12 | Planning — Taskweft | 8 | mvp | ✓ | 8, 11 |
-| 13 | FDB schema design | 8 | full | — | 11 |
+| 13 | FDB schema — linear-scaling key layout | 8 | full | — | 11 |
 | 14 | Wire format — bit-crushed | 10 | full | ✓ | 7 |
 | 15 | Web client — Discord-like | 16 | mvp | ✓ | 14, 16 |
 | 16 | World output format | 4 | mvp | ✓ | 7 |
