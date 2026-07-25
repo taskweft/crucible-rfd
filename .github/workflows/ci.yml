@@ -15,13 +15,13 @@ jobs:
       - name: Install build deps
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq cmake gcc libssl-dev libuv1-dev libyajl-dev libz-dev make pkg-config bc
+          sudo apt-get install -y -qq cmake gcc libssl-dev libyajl-dev libz-dev make pkg-config bc
 
       - name: Build libh2o
         run: |
           git clone --depth=1 https://github.com/h2o/h2o.git /tmp/h2o
           cd /tmp/h2o
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DWITH_MRUBY=off -S .
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DWITH_MRUBY=off -DWITH_UV=off -S .
           cmake --build build -j$(nproc)
           sudo cmake --install build
 

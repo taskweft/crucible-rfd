@@ -1,5 +1,5 @@
 CC      ?= gcc
-CFLAGS  ?= -std=c17 -Wall -Wextra -Wpedantic -O2 -g -pthread
+CFLAGS  ?= -std=c17 -Wall -Wextra -Wpedantic -O2 -g -pthread -I/usr/include/foundationdb
 LDFLAGS ?= -pthread
 LIBS    ?= -lh2o -lfdb_c -ldl -lm
 
