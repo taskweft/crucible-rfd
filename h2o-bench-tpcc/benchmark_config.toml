@@ -1,0 +1,25 @@
+[default]
+db_url = "fdb://tfb-database:4500"
+approach = "Realistic"
+classification = "Platform"
+database = "foundationdb"
+framework = "libh2o"
+language = "C"
+flavor = "None"
+orm = "Raw"
+platform = "None"
+webserver = "h2o"
+os = "Linux"
+database_os = "Linux"
+display_name = "h2o-bench-tpcc"
+port = 8080
+notes = "TechEmpower benchmark on FoundationDB via libfdb_c"
+
+[default.tests]
+json_url = "/json"
+db_url = "/db"
+query_url = "/queries?queries="
+fortune_url = "/fortunes"
+update_url = "/updates?queries="
+plaintext_url = "/plaintext"
+cached_query_url = "/cached-worlds?queries="
