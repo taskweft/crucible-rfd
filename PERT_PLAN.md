@@ -1,44 +1,39 @@
-# Crucible RFD Project — PERT Critical Path
+# Crucible — PERT Critical Path Plan
 
-Generated from `taskweft/taskweft` planner (RFD-timed domain).
+Generated from `taskweft/taskweft` planner (temporal HTN domain).
 
-## Temporal plan
+## Dependencies
 
-| Task | Duration | Start | End | Critical |
-|------|----------|-------|-----|----------|
-| RFD 3 — Tech stack | 2d (48H) | Mon Jul 27 | Tue Jul 28 | ✓ |
-| RFD 4 — World design | 3d (72H) | Tue Jul 28 | Thu Jul 30 | ✓ |
-| RFD 5 — Scoring protocol | 2d (48H) | Tue Jul 28 | Wed Jul 29 | — |
-| Prototype (Go scaffold) | 3.3d (80H) | Fri Jul 31 | Tue Aug 4 | ✓ |
-| World JSON data | 2.5d (60H) | Thu Jul 30 | Mon Aug 3 | — |
-| Eval harness | 2.3d (56H) | Tue Aug 4 | Thu Aug 6 | ✓ |
-| Deploy | 1d (24H) | Thu Aug 6 | Fri Aug 7 | ✓ |
+- RFD 3 (World design) and RFD 4 (FDB schema) depend on RFD 2 (project def)
+- Taskweft NPC domain depends on RFD 3 + RFD 4
+- WebSocket handler depends on Taskweft NPC domain
+- Human-playable alpha depends on all above
+- Eval harness depends on alpha
 
-**Critical path:** 280H / 12 working days
+## Critical path (12 days)
 
 ```mermaid
 gantt
-    title Crucible — RFD Project Plan  (Critical path: 12d)
+    title Crucible — Project Plan (Critical path: 12d)
     dateFormat  YYYY-MM-DD
     axisFormat  %b %d (%a)
 
     section Design
-    RFD 3 — Tech stack          :crit, rfd3, 2026-07-27, 2d
-    RFD 4 — World design        :crit, rfd4, after rfd3, 3d
-    RFD 5 — Scoring protocol    :rfd5, after rfd3, 2d
+    RFD 3 — World design          :crit, rfd3, 2026-07-27, 2d
+    RFD 4 — FDB schema            :crit, rfd4, after rfd3, 3d
+    RFD 5 — Taskweft NPC domain   :rfd5, after rfd3, 2d
 
     section Build
-    Prototype (Go scaffold)     :crit, proto, after rfd4, 4d
-    World JSON data             :world, after rfd5, 3d
+    WebSocket + slash handler     :crit, ws, after rfd4, 4d
+    FDB world state layer         :world, after rfd5, 3d
 
     section Delivery
-    Eval harness                :crit, harness, after proto, 3d
-    Deploy                      :crit, deploy, after harness, 1d
+    Human-playable alpha          :crit, alpha, after ws, 3d
+    LLM eval harness              :crit, harness, after alpha, 1d
 ```
 
-## Float / Slack
+## Stack
 
-- **RFD 5** + **World JSON**: 108H combined, fits within the 208H critical
-  path window (RFD 4 → Prototype → Harness) with ~52H total float.
-- **RFD 4** and **RFD 5** are parallel after RFD 3 completes — the planner
-  serialized them but they have no cross-dependency.
+- **libh2o** — HTTP/2, WebSocket, slash-command dispatch
+- **FoundationDB** — world state persistence
+- **Taskweft** — HTN planner for NPC behavior + scenario logic
