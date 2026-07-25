@@ -34,7 +34,9 @@ jobs:
 
       - name: Build crucible-demo
         run: |
-          make clean && make -j$(nproc)
+          cd h2o-bench-tpcc
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -S .
+          cmake --build build -j$(nproc)
 
       - name: Install wrk
         run: |
@@ -58,7 +60,7 @@ jobs:
         run: |
           sudo pkill crucible-demo 2>/dev/null || true
           sleep 1
-          ./build/crucible-demo -a 1 -c /etc/foundationdb/fdb.cluster -p 8080 &
+          ./h2o-bench-tpcc/build/h2o-bench-tpcc -a 1 -c /etc/foundationdb/fdb.cluster -p 8080 &
           sleep 3
           wrk -t1 -c8 -d15s http://127.0.0.1:8080/ping > /tmp/bench1.txt 2>&1
           cat /tmp/bench1.txt
@@ -68,7 +70,7 @@ jobs:
       - name: Benchmark 2 workers
         run: |
           sleep 1
-          ./build/crucible-demo -a 2 -c /etc/foundationdb/fdb.cluster -p 8081 &
+          ./h2o-bench-tpcc/build/h2o-bench-tpcc -a 2 -c /etc/foundationdb/fdb.cluster -p 8081 &
           sleep 3
           wrk -t2 -c16 -d15s http://127.0.0.1:8081/ping > /tmp/bench2.txt 2>&1
           cat /tmp/bench2.txt

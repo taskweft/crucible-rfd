@@ -21,9 +21,9 @@ RUN curl -LSs "https://github.com/apple/foundationdb/releases/download/${FDB_VER
 
 # Build crucible-demo
 WORKDIR /tmp/build
-COPY src/bench src/bench
-COPY Makefile .
-RUN make clean && make -j$(nproc)
+COPY . .
+RUN cmake -B build -DCMAKE_BUILD_TYPE=Release -S h2o-bench-tpcc && \
+    cmake --build build -j$(nproc)
 
 # Install wrk for benchmarking
 RUN git clone --depth=1 https://github.com/wg/wrk.git /tmp/wrk && \
