@@ -1,12 +1,12 @@
 ---
 authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
-state: ideation
+state: published
 discussion:
 labels: world-design
 stage: mvp
 ---
 
-# RFD 4: World design and narrative
+# RFD 4: World design — Middleham
 
 ## Design
 
