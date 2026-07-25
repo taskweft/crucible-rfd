@@ -1,6 +1,14 @@
-# RFD 16: zstd compression for FDB values
+---
+authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
+state: ideation
+discussion:
+labels: imported
+stage: mvp
+---
 
-**State:** discussion
+# zstd compression for FDB values
+
+state: discussion
 
 ## Decision
 

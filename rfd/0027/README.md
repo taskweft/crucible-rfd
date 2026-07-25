@@ -1,6 +1,14 @@
-# RFD 11: Async FDB callback chain for TPC-C transactions
+---
+authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
+state: ideation
+discussion:
+labels: imported
+stage: mvp
+---
 
-**State:** accepted
+# Async FDB callback chain for TPC-C transactions
+
+state: accepted
 
 ## Decision
 

@@ -1,8 +1,16 @@
-# RFD 2: zonefabric scaling
+---
+authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
+state: ideation
+discussion:
+labels: imported
+stage: mvp
+---
 
-**State:** discussion  
-**Scale knob:** zone count (direct, no multiplier)  
-**Source:** weftspun/scenario-tpcc-bench PR #2
+# zonefabric scaling
+
+state: discussion  
+
+
 
 Models weft-warp-loop's hub/instanced-zone game server. Each zone has 200 entities with uniform-random position/velocity. EFFECT_ENTITY and FANOUT_TARGET are runtime-only (produced by CastSpell, not seeded at load).
 

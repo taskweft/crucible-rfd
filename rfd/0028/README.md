@@ -1,6 +1,14 @@
-# RFD 12: TPC-C data loader design
+---
+authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
+state: ideation
+discussion:
+labels: imported
+stage: mvp
+---
 
-**State:** discussion
+# TPC-C data loader design
+
+state: discussion
 
 ## Decision
 

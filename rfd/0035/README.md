@@ -1,6 +1,14 @@
-# RFD 19: plausible-witness-dag for MMO feature ablation
+---
+authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
+state: ideation
+discussion:
+labels: imported
+stage: mvp
+---
 
-**State:** discussion
+# plausible-witness-dag for MMO feature ablation
+
+state: discussion
 
 ## Decision
 

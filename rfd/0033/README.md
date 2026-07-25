@@ -1,6 +1,14 @@
-# RFD 17: slotmap entity storage
+---
+authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
+state: ideation
+discussion:
+labels: imported
+stage: mvp
+---
 
-**State:** discussion
+# slotmap entity storage
+
+state: discussion
 
 ## Decision
 

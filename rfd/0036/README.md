@@ -1,6 +1,14 @@
-# RFD 20: PERT critical path for zonefabric implementation
+---
+authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
+state: ideation
+discussion:
+labels: imported
+stage: mvp
+---
 
-**State:** discussion
+# PERT critical path for zonefabric implementation
+
+state: discussion
 
 ## Decision
 

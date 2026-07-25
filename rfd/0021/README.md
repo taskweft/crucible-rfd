@@ -1,6 +1,14 @@
-# RFD 5: Actor-lite worker pool architecture
+---
+authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
+state: ideation
+discussion:
+labels: imported
+stage: mvp
+---
 
-**State:** discussion  
+# Actor-lite worker pool architecture
+
+state: discussion  
 **Target:** top 10 TechEmpower R23 data update test
 
 ## R23 data update test — top 10

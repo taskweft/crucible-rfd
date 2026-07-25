@@ -1,8 +1,16 @@
-# RFD 1: TPC-C scaling
+---
+authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
+state: ideation
+discussion:
+labels: imported
+stage: mvp
+---
 
-**State:** discussion  
-**Scale knob:** warehouse count (W)  
-**Source:** TPC-C specification v5.11
+# TPC-C scaling
+
+state: discussion  
+
+
 
 Standard TPC-C benchmark with W warehouses. Each warehouse contains
 10 districts, 3,000 customers per district, 100,000 items, and 100,000

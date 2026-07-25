@@ -1,6 +1,14 @@
-# RFD 13: Benchmark harness endpoint and transaction mix
+---
+authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
+state: ideation
+discussion:
+labels: imported
+stage: mvp
+---
 
-**State:** accepted
+# Benchmark harness endpoint and transaction mix
+
+state: accepted
 
 ## Decision
 

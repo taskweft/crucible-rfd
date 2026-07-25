@@ -1,8 +1,16 @@
-# RFD 3: assetcdn scaling
+---
+authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
+state: ideation
+discussion:
+labels: imported
+stage: mvp
+---
 
-**State:** discussion  
-**Scale knob:** asset count (direct, no multiplier)  
-**Source:** zone-backend's 3D asset CDN
+# assetcdn scaling
+
+state: discussion  
+
+
 
 Models zone-backend's 3D asset CDN. Each asset has one seed version,
 one edge cache entry, and 50 user entitlements. Edge cache entries are

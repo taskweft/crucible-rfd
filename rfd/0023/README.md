@@ -1,6 +1,14 @@
-# RFD 7: h2o TFB reference implementation reuse
+---
+authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
+state: ideation
+discussion:
+labels: imported
+stage: mvp
+---
 
-**State:** accepted
+# h2o TFB reference implementation reuse
+
+state: accepted
 
 ## Decision
 

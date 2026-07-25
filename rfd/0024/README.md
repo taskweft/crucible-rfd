@@ -1,6 +1,14 @@
-# RFD 8: Three-layer verification strategy
+---
+authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
+state: ideation
+discussion:
+labels: imported
+stage: mvp
+---
 
-**State:** accepted
+# Three-layer verification strategy
+
+state: accepted
 
 ## Decision
 

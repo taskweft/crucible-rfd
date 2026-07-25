@@ -1,6 +1,14 @@
-# RFD 9: TPC-C keyspace design for FoundationDB
+---
+authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
+state: ideation
+discussion:
+labels: imported
+stage: mvp
+---
 
-**State:** discussion
+# TPC-C keyspace design for FoundationDB
+
+state: discussion
 
 ## Overview
 

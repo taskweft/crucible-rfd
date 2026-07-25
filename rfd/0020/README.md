@@ -1,8 +1,16 @@
-# RFD 4: cassie scaling
+---
+authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
+state: ideation
+discussion:
+labels: imported
+stage: mvp
+---
 
-**State:** discussion  
-**Scale knob:** canvas count (direct, no multiplier)  
-**Source:** collaborative sketch sessions
+# cassie scaling
+
+state: discussion  
+
+
 
 Models collaborative sketch sessions: stroke append, beautify, undo.
 Each canvas has 10 subscribers, 5 seed strokes (20 points each),

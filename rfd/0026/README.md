@@ -1,6 +1,14 @@
-# RFD 10: Binary value encoding for FDB
+---
+authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
+state: ideation
+discussion:
+labels: imported
+stage: mvp
+---
 
-**State:** accepted
+# Binary value encoding for FDB
+
+state: accepted
 
 ## Decision
 

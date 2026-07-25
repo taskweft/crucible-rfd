@@ -1,6 +1,14 @@
-# RFD 6: FoundationDB selection over CockroachDB
+---
+authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
+state: ideation
+discussion:
+labels: imported
+stage: mvp
+---
 
-**State:** accepted (supersedes original CockroachDB draft)
+# FoundationDB selection over CockroachDB
+
+state: accepted (supersedes original CockroachDB draft)
 
 ## Decision
 

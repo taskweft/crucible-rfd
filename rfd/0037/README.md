@@ -1,6 +1,14 @@
-# RFD 21: CrucibleBench MUD ablation with taskweft RECTGTN planner
+---
+authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
+state: ideation
+discussion:
+labels: imported
+stage: mvp
+---
 
-**State:** discussion
+# CrucibleBench MUD ablation with taskweft RECTGTN planner
+
+state: discussion
 
 ## Decision
 

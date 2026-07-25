@@ -1,6 +1,14 @@
-# RFD 14: CI/CD pipeline design
+---
+authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
+state: ideation
+discussion:
+labels: imported
+stage: mvp
+---
 
-**State:** accepted
+# CI/CD pipeline design
+
+state: accepted
 
 ## Decision
 
