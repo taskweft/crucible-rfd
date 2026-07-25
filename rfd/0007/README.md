@@ -3,6 +3,7 @@ authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
 state: ideation
 discussion:
 labels: protocol
+stage: mvp
 ---
 
 # RFD 7: Slash command protocol
@@ -37,8 +38,9 @@ The Watch Captain stands nearby, watching the crowd.
 
 The same protocol applies to every client — human, scripted bot,
 or automated evaluation harness. The server does not distinguish
-between connection types. Evaluation logs capture every
-command-observation pair for replay and scoring.
+between connection types (see RFD 2).
+
+Wire frames are bit-crushed binary, not text/JSON (see RFD 14).
 
 ## Implementation status
 

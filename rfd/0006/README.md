@@ -3,6 +3,7 @@ authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
 state: ideation
 discussion:
 labels: architecture
+stage: full
 ---
 
 # RFD 6: Architecture — libh2o, FDB schema, WebSocket
@@ -40,11 +41,10 @@ for a given tick. No migration overhead — schema is application-enforced.
 
 ### Protocol neutrality
 
-The game protocol is text-over-WebSocket. Any client that speaks WebSocket
-and sends slash commands can play — a terminal telnet wrapper, a browser
-JS client, an IRC bridge, or an automated evaluation harness. The server
-does not distinguish between human and automated players. There is one
-protocol, one set of affordances.
+The game protocol is text-over-WebSocket at the application layer,
+bit-crushed binary on the wire (see RFD 7, RFD 14). The server does
+not distinguish between human and automated players — see RFD 2 for
+the governing principle.
 
 ## Open questions
 

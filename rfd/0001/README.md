@@ -3,6 +3,7 @@ authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
 state: published
 discussion: https://github.com/taskweft/crucible-rfd/pull/1
 labels: process
+stage: mvp
 ---
 
 # RFD 1: Requests for Discussion
