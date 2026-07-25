@@ -2,7 +2,7 @@ FROM buildpack-deps:26.04 AS compile
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -qq && apt-get install --no-install-recommends -qqy \
-      cmake gcc libssl-dev libuv1-dev libyajl-dev libz-dev make pkg-config
+      cmake gcc libssl-dev libyajl-dev libz-dev make pkg-config
 
 # Build libh2o
 ARG H2O_VERSION=ccea64b17ade832753db933658047ede9f31a380
