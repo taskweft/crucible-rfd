@@ -73,7 +73,7 @@ flowchart LR
 
     subgraph Phase3[Phase 3: protocol + client]
         r7 --> r14[RFD 14<br>Wire format<br>10h]
-        r7 --> r16[RFD 16<br>World output (Elixir DSL)<br>4h]
+        r7 --> r16["RFD 16<br>World output (Elixir DSL)<br>4h"]
         r14 --> r15[RFD 15<br>Web client<br>16h]
         r16 --> r15
     end
