@@ -22,13 +22,12 @@ jobs:
           curl -LsS "https://github.com/apple/foundationdb/releases/download/7.3.79/foundationdb-clients_7.3.79-1_amd64.deb" -o /tmp/fdb.deb
           sudo -S -p '' dpkg -i /tmp/fdb.deb
 
-      - name: Build H2O
+      - name: Build H2O (vendored)
         run: |
-          git clone --depth=1 https://github.com/h2o/h2o.git /tmp/h2o
-          cd /tmp/h2o
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DWITH_MRUBY=off -S .
+          cd vendor/h2o
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DWITH_MRUBY=off -DWITH_UV=off -S .
           cmake --build build -j$(nproc)
-          sudo -S -p '' cmake --install build
+          sudo cmake --install build
 
       - name: Build crucible-demo
         run: |
