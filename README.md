@@ -1,50 +1,22 @@
-# crucible-rfd
+H2O - an optimized HTTP server with support for HTTP/1.x, HTTP/2 and HTTP/3 (experimental)
+===
 
-RFDs for the Crucible project — a playable MUD with deterministic NPCs,
-optional automated evaluation, and an LLM-capable evaluation mode.
+[![CI](https://github.com/h2o/h2o/actions/workflows/ci.yml/badge.svg)](https://github.com/h2o/h2o/actions/workflows/ci.yml)
+<a href="https://scan.coverity.com/projects/h2o-h2o">
+  <img alt="Coverity Scan Build Status"
+       src="https://scan.coverity.com/projects/10654/badge.svg"/>
+</a>
+[![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/h2o.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:h2o)
 
-See `PERT_PLAN.md` for the Gall's Law implementation schedule.
+Copyright (c) 2014-2019 [DeNA Co., Ltd.](http://dena.com/), [Kazuho Oku](https://github.com/kazuho/), [Tatsuhiko Kubo](https://github.com/cubicdaiya/), [Domingo Alvarez Duarte](https://github.com/mingodad/), [Nick Desaulniers](https://github.com/nickdesaulniers/), [Marc Hörsken](https://github.com/mback2k), [Masahiro Nagano](https://github.com/kazeburo/), Jeff Marrison, [Daisuke Maki](https://github.com/lestrrat/), [Laurentiu Nicola](https://github.com/GrayShade/), [Justin Zhu](https://github.com/zlm2012/), [Tatsuhiro Tsujikawa](https://github.com/tatsuhiro-t), [Ryosuke Matsumoto](https://github.com/matsumotory), [Masaki TAGAWA](https://github.com/mochipon), [Masayoshi Takahashi](https://github.com/takahashim), [Chul-Woong Yang](https://github.com/cwyang), [Shota Fukumori](https://github.com/sorah), [Satoh Hiroh](https://github.com/cho45), [Fastly, Inc.](https://www.fastly.com), [David Carlier](https://github.com/devnexen), [Frederik Deweerdt](https://github.com/deweerdt), [Jonathan Foote](https://github.com/jfoote), [Yannick Koechlin](https://github.com/yannick), [Harrison Bowden](https://github.com/hbowden), [Kazantsev Mikhail](https://github.com/kazan417)
 
-## RFDs
+H2O is a new generation HTTP server.
+Not only is it very fast, it also provides much quicker response to end-users when compared to older generations of HTTP servers.
 
-| RFD | Title | Stage |
-|-----|-------|-------|
-| 0001 | Requests for Discussion | mvp |
-| 0002 | Project definition | mvp |
-| 0003 | Transport — libh2o | mvp |
-| 0004 | World design — Middleham | mvp |
-| 0005 | Simulation model — 64 Hz ticked | mvp |
-| 0006 | Architecture — C server, libh2o, FDB, WebSocket | full |
-| 0007 | Slash command protocol | mvp |
-| 0008 | Taskweft NPC domain | full |
-| 0009 | Evaluation scoring | someday |
-| 0010 | Bandwidth allocation | someday |
-| 0011 | State — FDB (linear-scaling KV) | mvp |
-| 0012 | Planning — Taskweft (C FFI) | mvp |
-| 0013 | FDB schema — linear-scaling key layout | full |
-| 0014 | Wire format — bit-crushed binary frames | full |
-| 0015 | Web client — Discord-like slash commands | mvp |
-| 0016 | World output (C structs) | mvp |
-| 0017 | CI/CD pipeline | mvp |
-| 0018 | Zonefabric scaling (reference) | mvp |
-| 0019 | Deployment — Docker + Fly.io | mvp |
-| 0020 | Vendored dependencies | mvp |
-| 0021 | Actor-lite worker pool (reference) | mvp |
-| 0022 | FDB selection (reference) | mvp |
-| 0025 | FDB keyspace design (reference) | mvp |
-| 0032 | Zstd compression (reference) | mvp |
-| 0033 | Slotmap entity storage (reference) | mvp |
+Written in C and licensed under [the MIT License](http://opensource.org/licenses/MIT), it can also be used as a library.
 
-## Scenarios
+For more information, please refer to the documentation at [h2o.examp1e.net](https://h2o.examp1e.net).
 
-| File | Scenario | Description |
-|------|----------|-------------|
-| `priv/scenarios/middleham.ex` | Middleham | 12 rooms, 4 NPCs, trust/suspicion system, 2 objectives |
-
-## Implementation
-
-- `h2o-bench-tpcc/` — benchmark code: SPSC ring, worker pool, main.c
-- `vendor/h2o/` — vendored libh2o source (git subtree)
-- `priv/scenarios/` — scenario definitions (Taskweft DSL)
-
-See `rfd/XXXX/README.md` for each RFD document.
+Reporting Security Issues
+---
+Please report vulnerabilities to h2o-vuln@googlegroups.com. See [SECURITY.md](SECURITY.md) for more information.
