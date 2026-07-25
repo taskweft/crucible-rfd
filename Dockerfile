@@ -1,55 +1,48 @@
-FROM buildpack-deps:26.04 AS compile
+FROM foundationdb/foundationdb:7.3.79 AS fdb
 
-ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get update -qq && apt-get install --no-install-recommends -qqy \
-      cmake gcc libssl-dev libuv1-dev libyajl-dev libz-dev make pkg-config
+# Compile stage: use Rocky Linux 9 (same glibc as FDB runtime)
+FROM rockylinux:9-minimal AS compile
 
-# Build libh2o
-ARG H2O_VERSION=ccea64b17ade832753db933658047ede9f31a380
-WORKDIR /tmp/h2o-build
-RUN curl -LSs "https://github.com/h2o/h2o/archive/${H2O_VERSION}.tar.gz" | \
-      tar --strip-components=1 -xz && \
-    cmake -B build -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_C_FLAGS="-flto=auto -march=x86-64-v3 -mtune=generic" \
-      -DWITH_MRUBY=off -S . && \
-    cmake --build build -j$(nproc) && cmake --install build
+RUN microdnf install -y cmake gcc gcc-c++ make openssl-devel zlib-devel \
+      pkgconfig diffutils curl binutils tar gzip perl && \
+    microdnf clean all
 
-# Install FDB client headers + lib for compilation
+# FDB runtime lib from official image (multi-arch)
+COPY --from=fdb /usr/lib/libfdb_c.so /usr/lib/
+
+# FDB headers — arch-independent, extract from amd64 deb
 ARG FDB_VERSION=7.3.79
-RUN curl -LSs "https://github.com/apple/foundationdb/releases/download/${FDB_VERSION}/foundationdb-clients_${FDB_VERSION}-1_amd64.deb" -o /tmp/fdb.deb && \
-    dpkg -i /tmp/fdb.deb && rm /tmp/fdb.deb
+RUN curl -sL "https://github.com/apple/foundationdb/releases/download/${FDB_VERSION}/foundationdb-clients_${FDB_VERSION}-1_amd64.deb" -o /tmp/fdb.deb && \
+    cd /tmp && ar x fdb.deb && tar xf data.tar.gz && \
+    cp -r usr/include/foundationdb/ /usr/include/ && \
+    rm -rf /tmp/fdb.deb /tmp/control.tar.gz /tmp/data.tar.gz /tmp/debian-binary usr/
+RUN ldconfig
+
+# Build libh2o from vendored source
+COPY vendor/h2o /tmp/h2o
+RUN cmake -B /tmp/h2o/build -DCMAKE_BUILD_TYPE=Release \
+      -DWITH_MRUBY=off -DWITH_UV=off -S /tmp/h2o && \
+    cmake --build /tmp/h2o/build -j$(nproc) && cmake --install /tmp/h2o/build
 
 # Build crucible-demo
-WORKDIR /tmp/build
-COPY src/bench src/bench
-COPY Makefile .
-RUN make clean && make -j$(nproc)
+COPY h2o-bench-tpcc/ /tmp/build
+RUN cmake -B /tmp/build/build -DCMAKE_BUILD_TYPE=Release -S /tmp/build && \
+    cmake --build /tmp/build/build -j$(nproc)
 
-# Install wrk for benchmarking
-RUN git clone --depth=1 https://github.com/wg/wrk.git /tmp/wrk && \
-    cd /tmp/wrk && make -j && cp wrk /usr/local/bin/
+# Build wrk
+RUN curl -sL https://github.com/wg/wrk/archive/refs/tags/4.2.0.tar.gz -o /tmp/wrk.tar.gz && \
+    cd /tmp && tar xzf wrk.tar.gz && cd wrk-4.2.0 && \
+    make -j$(nproc) && cp wrk /usr/local/bin/
 
-# Runtime stage
-FROM ubuntu:26.04
-
-ARG FDB_VERSION=7.3.79
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -qqy libssl3 libyajl2 curl ca-certificates adduser && \
-    curl -LSs "https://github.com/apple/foundationdb/releases/download/${FDB_VERSION}/foundationdb-clients_${FDB_VERSION}-1_amd64.deb" -o /tmp/fdb-client.deb && \
-    dpkg -i /tmp/fdb-client.deb && \
-    curl -LSs "https://github.com/apple/foundationdb/releases/download/${FDB_VERSION}/foundationdb-server_${FDB_VERSION}-1_amd64.deb" -o /tmp/fdb-server.deb && \
-    dpkg -i /tmp/fdb-server.deb && apt-get install -f -qqy && \
-    rm /tmp/fdb-*.deb && rm -rf /var/lib/apt/lists/*
+# Runtime stage — use FDB image (has fdbmonitor + libfdb_c + multi-arch)
+FROM foundationdb/foundationdb:7.3.79
 
 COPY --from=compile /tmp/build/build/crucible-demo /usr/local/bin/crucible-demo
 COPY --from=compile /usr/local/bin/wrk /usr/local/bin/wrk
-
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /entrypoint.sh && ldconfig
 
-ENV LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu
-ENV WORKERS=2
-ENV PORT=8080
+ENV LD_LIBRARY_PATH=/usr/lib
 
 EXPOSE 8080
 ENTRYPOINT ["/entrypoint.sh"]

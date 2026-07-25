@@ -1,93 +1,89 @@
-name: crucible-demo
+name: CI
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    name: "${{ matrix.name }}"
+    runs-on: [ubuntu-24.04]
+
+    # We want to run on external PRs, but not on our own internal PRs as they'll be run
+    # by the push to the branch.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: default
+            command: make -f misc/docker-ci/check.mk ALL BUILD_ARGS=-j6 TEST_ENV='TEST_JOBS=4 TEST_PLATFORM=github-actions'
+          - name: OpenSSL 1.1.0 + Fuzz
+            command: make -f misc/docker-ci/check.mk ossl1.1.0+fuzz BUILD_ARGS=-j6 TEST_ENV='TEST_JOBS=4 TEST_PLATFORM=github-actions'
+          - name: OpenSSL 1.1.1
+            command: make -f misc/docker-ci/check.mk ossl1.1.1 BUILD_ARGS=-j6 TEST_ENV='TEST_JOBS=4 TEST_PLATFORM=github-actions'
+          - name: OpenSSL 3.0 (Ubuntu 24.04 / DTrace)
+            command: make -f misc/docker-ci/check.mk ossl3.0 BUILD_ARGS=-j6 TEST_ENV='TEST_JOBS=4 TEST_PLATFORM=github-actions'
+          - name: boringssl
+            command: make -f misc/docker-ci/check.mk boringssl BUILD_ARGS=-j6 TEST_ENV='TEST_JOBS=4 TEST_PLATFORM=github-actions'
+          - name: ASan (Ubuntu 24.04)
+            command: make -f misc/docker-ci/check.mk asan BUILD_ARGS=-j6 TEST_ENV='TEST_JOBS=4 TEST_PLATFORM=github-actions'
+          - name: Coverage
+            command: make -f misc/docker-ci/check.mk coverage BUILD_ARGS=-j6 TEST_ENV='TEST_JOBS=4 TEST_PLATFORM=github-actions'
+
+    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    - name: setup-docker
+      uses: docker/setup-docker-action@v4
+      with:
+        daemon-config: |
+          {
+            "ipv6": true,
+            "fixed-cidr-v6": "2001:db8:1::/64"
+          }
+        channel: stable
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      continue-on-error: true
 
-      - name: Install build deps
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq cmake gcc libssl-dev libuv1-dev libyajl-dev libz-dev make pkg-config bc
+    - name: Run with Docker
+      shell: 'script -q -e -c "bash -xe {0}"'
+      run: |
+        chmod -R ugo+w .
+        ${{ matrix.command }}
+        # if there's a summary markdown in the container, show it.
+        container_id=$(docker container ls -al --format '{{ .ID }}')
+        docker cp $container_id:/home/ci/summary.md $GITHUB_STEP_SUMMARY || true
 
-      - name: Build libh2o
-        run: |
-          git clone --depth=1 https://github.com/h2o/h2o.git /tmp/h2o
-          cd /tmp/h2o
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DWITH_MRUBY=off -S .
-          cmake --build build -j$(nproc)
-          sudo cmake --install build
+  # See https://github.com/google/oss-fuzz/tree/master/projects/h2o for details
+  ossfuzz:
+    name: OSS Fuzz
+    runs-on: ubuntu-latest
 
-      - name: Install FDB client + server
-        run: |
-          curl -LSs "https://github.com/apple/foundationdb/releases/download/7.3.79/foundationdb-clients_7.3.79-1_amd64.deb" -o /tmp/fdb-client.deb
-          sudo dpkg -i /tmp/fdb-client.deb
-          curl -LSs "https://github.com/apple/foundationdb/releases/download/7.3.79/foundationdb-server_7.3.79-1_amd64.deb" -o /tmp/fdb-server.deb
-          sudo dpkg -i /tmp/fdb-server.deb || sudo apt-get install -f -qqy
+    # see above
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
 
-      - name: Build crucible-demo
-        run: |
-          make clean && make -j$(nproc)
-
-      - name: Install wrk
-        run: |
-          git clone --depth=1 https://github.com/wg/wrk.git /tmp/wrk
-          cd /tmp/wrk && make -j && sudo cp wrk /usr/local/bin/
-
-      - name: Start FoundationDB
-        run: |
-          sudo fdbmonitor --conffile /etc/foundationdb/foundationdb.conf \
-            --lockfile /tmp/fdbmonitor.pid &
-          for i in $(seq 1 30); do
-            if sudo fdbcli --exec "status minimal" --timeout 2 2>/dev/null | grep -q "committed"; then
-              echo "FDB ready after ${i}s"
-              break
-            fi
-            if [ "$i" = "30" ]; then echo "FDB failed to start"; exit 1; fi
-            sleep 1
-          done
-
-      - name: Benchmark 1 worker
-        run: |
-          sudo pkill crucible-demo 2>/dev/null || true
-          sleep 1
-          ./build/crucible-demo -a 1 -c /etc/foundationdb/fdb.cluster -p 8080 &
-          sleep 3
-          wrk -t1 -c8 -d15s http://127.0.0.1:8080/ping > /tmp/bench1.txt 2>&1
-          cat /tmp/bench1.txt
-          sudo pkill crucible-demo 2>/dev/null || true
-          grep "Requests/sec" /tmp/bench1.txt | awk '{print $2}' > /tmp/rps1.txt
-
-      - name: Benchmark 2 workers
-        run: |
-          sleep 1
-          ./build/crucible-demo -a 2 -c /etc/foundationdb/fdb.cluster -p 8081 &
-          sleep 3
-          wrk -t2 -c16 -d15s http://127.0.0.1:8081/ping > /tmp/bench2.txt 2>&1
-          cat /tmp/bench2.txt
-          sudo pkill crucible-demo 2>/dev/null || true
-          grep "Requests/sec" /tmp/bench2.txt | awk '{print $2}' > /tmp/rps2.txt
-
-      - name: Show scaling ratio
-        run: |
-          RPS1=$(cat /tmp/rps1.txt)
-          RPS2=$(cat /tmp/rps2.txt)
-          RATIO=$(echo "scale=2; $RPS2 / $RPS1" | bc)
-          echo ""
-          echo "=========================================="
-          echo "   1 worker: $RPS1 req/s"
-          echo "   2 workers: $RPS2 req/s"
-          echo "   Scaling ratio: ${RATIO}x"
-          echo "=========================================="
-          if [ "$(echo "$RATIO < 1.5" | bc)" -eq 1 ]; then
-            echo "FAIL: sub-linear scaling (${RATIO}x, need >= 1.5x)"
-            exit 1
-          fi
-          echo "PASS: linear scaling demonstrated (${RATIO}x)"
+    timeout-minutes: 60
+    steps:
+    - name: Build Fuzzers
+      uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@master
+      with:
+        oss-fuzz-project-name: 'h2o'
+        dry-run: false
+    - name: Run Fuzzers
+      uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@master
+      with:
+        oss-fuzz-project-name: 'h2o'
+        fuzz-seconds: 600
+        dry-run: false
+    - name: Upload Crash
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: artifacts
+        path: ./out/artifacts

@@ -1,0 +1,17 @@
+[Unit]
+Description=Crucible benchmark — 1 worker vs 2 workers
+After=crucible-demo.service
+Requires=crucible-demo.service
+
+[Container]
+Image=docker.io/wg/wrk:latest
+ContainerName=crucible-bench
+Network=host
+Exec=sh -c 'sleep 3 && wrk -t1 -c8 -d15s http://127.0.0.1:8080/zone?n=200 && echo --- && wrk -t2 -c16 -d15s http://127.0.0.1:8081/zone?n=200'
+
+[Service]
+Type=oneshot
+TimeoutStartSec=60s
+
+[Install]
+WantedBy=default.target

@@ -6,42 +6,61 @@ labels: state,foundationdb
 stage: mvp
 ---
 
-# RFD 11: State layer — FoundationDB
+# RFD 11: State — FDB (linear-scaling KV)
 
 ## Stack
 
 | Layer | Choice | Rationale |
 |-------|--------|-----------|
-| State | FoundationDB | Ordered key-value store with strict serializable transactions. Schema-free — world state maps naturally to (room, npc, player) keys. |
+| State | FoundationDB | Ordered key-value store with strict serializable transactions. Schema-free — world state maps naturally to (room, npc, player) keys. Linear throughput with cluster size. |
 
-## Decisions
+## Keyspace
 
-- **FoundationDB over SQL** — FDB's ordered key-value model maps naturally
-  to spatial and inventory state. No schema migrations. Strict serializable
-  isolation without coordinator overhead.
-- **World state as key-value tuples** — each entity type occupies a key
-  prefix, making range scans efficient for tick-wide operations.
-- **Tick counter as a monotonic key** — global tick value stored and
-  incremented atomically per tick.
+One zone (zone 0) covers the entire Middleham world. All 12 rooms
+fit in a single zstd-compressed blob committed per tick:
 
-## Key prefixes
+```
+cr/zone/0                  -> zstd blob: { world_snapshot }
+cr/player/{pid}/{field}   -> player_t (point lookups for active players)
+cr/tick/{sid}              -> uint64 (tick counter)
+```
 
-| Prefix | Content | Description |
-|--------|---------|-------------|
-| `room/` | Room JSON | Room description, exits, items |
-| `npc/`  | NPC JSON | NPC state, trust, knowledge flags |
-| `player/` | Player JSON | Inventory, location, flags |
-| `obj/`  | Object JSON | Item properties, location |
-| `tick/` | int | Global tick counter |
+### Zone blob structure
+
+The zone blob contains the authoritative world state:
+
+| Field | Content |
+|-------|---------|
+| Room graph | 12 rooms, exits, descriptions |
+| NPC state | Trust, suspicion, talk_count, marked flag |
+| Item locations | Which room each item is in |
+| Player state | Current room, inventory, knowledge flags |
+
+At 64Hz tick rate, a ~200 byte blob produces 12.8KB/s write to FDB.
+One key, one transaction, no range scans needed.
+
+## Zstd compression
+
+All zone state blobs use zstd compression (level 3 default). Compresses
+in memory before the FDB set call. Decompressed on read after the FDB
+get call. The zone-state keyspace (RFD 0032) describes the compression
+wrapper.
+
+## Gall's Law
+
+Start with one zone = whole world. Split into multiple zones only when
+the world grows beyond what a single zone blob can hold at 64Hz. For
+the MUD POC with 12 rooms and ~30 entities, that never happens.
 
 ## See also
 
-- **RFD 13**: FDB schema design (full stage — detailed key layout)
-- **RFD 5**: Simulation model (tick counter)
-- **RFD 3**: Transport (libh2o)
+- **RFD 13**: FDB schema — linear-scaling key layout
+- **RFD 0032**: zstd compression for FDB values
+- **RFD 0018**: zonefabric scaling (multi-zone model)
 
 ## Implementation status
 
 - [x] Stack selected
 - [ ] FDB driver linked
-- [ ] Basic key-value read/write
+- [ ] Zone blob read/write
+- [ ] zstd compression wrapper
