@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "If you use this repository, please cite it."
+message: "If you use this repository, please cite it and its dependencies."
 authors:
   - family-names: Lee
     given-names: "K. S. Ernest"
@@ -9,3 +9,42 @@ version: 0.1.0
 date-released: 2026-07-24
 url: "https://github.com/taskweft/crucible-rfd"
 license: MIT
+references:
+  - type: dataset
+    title: "CrucibleBench — Multi-model LLM evaluation on MUDs"
+    doi: "10.5281/zenodo.21386663"
+    year: 2026
+    authors:
+      - family-names: Lee
+        given-names: "K. S. Ernest"
+        alias: fire
+  - type: software
+    title: "FoundationDB — distributed key-value store"
+    url: "https://github.com/apple/foundationdb"
+    year: 2026
+    publisher: Apple Inc.
+  - type: software
+    title: "Taskweft — temporal HTN planner"
+    url: "https://github.com/taskweft/taskweft"
+    year: 2026
+  - type: software
+    title: "libh2o — HTTP/1.1 + HTTP/3 + WebSocket server"
+    url: "https://github.com/h2o/h2o"
+    year: 2026
+    publisher: H2O project contributors
+  - type: software
+    title: "lean-humanoid-rom — humanoid range-of-motion and muscle constraints"
+    url: "https://github.com/v-sekai-multiplayer-fabric/lean-humanoid-rom"
+    year: 2026
+  - type: software
+    title: "lean-spatial-oracle — predictive BVH spatial oracle"
+    url: "https://github.com/v-sekai-multiplayer-fabric/lean-spatial-oracle"
+    year: 2026
+  - type: software
+    title: "lean-shared-core — shared primitive types"
+    url: "https://github.com/v-sekai-multiplayer-fabric/lean-shared-core"
+    year: 2026
+  - type: software
+    title: "lean-rebac-core — relationship-based access control"
+    url: "https://github.com/v-sekai-multiplayer-fabric/lean-rebac-core"
+    year: 2026
