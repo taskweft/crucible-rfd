@@ -14,10 +14,6 @@ references:
     title: "CrucibleBench — Multi-model LLM evaluation on MUDs"
     doi: "10.5281/zenodo.21386663"
     year: 2026
-    authors:
-      - family-names: Lee
-        given-names: "K. S. Ernest"
-        alias: fire
   - type: software
     title: "FoundationDB — distributed key-value store"
     url: "https://github.com/apple/foundationdb"
