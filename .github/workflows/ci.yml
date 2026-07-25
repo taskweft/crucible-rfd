@@ -15,13 +15,13 @@ jobs:
       - name: Install build deps
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq cmake gcc libssl-dev libuv1-dev libyajl-dev libz-dev make pkg-config bc
+          sudo apt-get install -y -qq cmake gcc libssl-dev libyajl-dev libz-dev make pkg-config bc
 
       - name: Build libh2o
         run: |
           git clone --depth=1 https://github.com/h2o/h2o.git /tmp/h2o
           cd /tmp/h2o
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DWITH_MRUBY=off -S .
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DWITH_MRUBY=off -DWITH_UV=off -S .
           cmake --build build -j$(nproc)
           sudo cmake --install build
 
@@ -34,7 +34,9 @@ jobs:
 
       - name: Build crucible-demo
         run: |
-          make clean && make -j$(nproc)
+          cd h2o-bench-tpcc
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -S .
+          cmake --build build -j$(nproc)
 
       - name: Install wrk
         run: |
@@ -58,9 +60,9 @@ jobs:
         run: |
           sudo pkill crucible-demo 2>/dev/null || true
           sleep 1
-          ./build/crucible-demo -a 1 -c /etc/foundationdb/fdb.cluster -p 8080 &
+          ./h2o-bench-tpcc/build/crucible-demo -a 1 -c /etc/foundationdb/fdb.cluster -p 8080 &
           sleep 3
-          wrk -t1 -c8 -d15s http://127.0.0.1:8080/ping > /tmp/bench1.txt 2>&1
+          wrk -t1 -c8 -d15s http://127.0.0.1:8080/zone?n=200 > /tmp/bench1.txt 2>&1
           cat /tmp/bench1.txt
           sudo pkill crucible-demo 2>/dev/null || true
           grep "Requests/sec" /tmp/bench1.txt | awk '{print $2}' > /tmp/rps1.txt
@@ -68,9 +70,9 @@ jobs:
       - name: Benchmark 2 workers
         run: |
           sleep 1
-          ./build/crucible-demo -a 2 -c /etc/foundationdb/fdb.cluster -p 8081 &
+          ./h2o-bench-tpcc/build/crucible-demo -a 2 -c /etc/foundationdb/fdb.cluster -p 8081 &
           sleep 3
-          wrk -t2 -c16 -d15s http://127.0.0.1:8081/ping > /tmp/bench2.txt 2>&1
+          wrk -t2 -c16 -d15s http://127.0.0.1:8081/zone?n=200 > /tmp/bench2.txt 2>&1
           cat /tmp/bench2.txt
           sudo pkill crucible-demo 2>/dev/null || true
           grep "Requests/sec" /tmp/bench2.txt | awk '{print $2}' > /tmp/rps2.txt

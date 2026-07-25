@@ -1,47 +1,21 @@
----
-authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
-state: ideation
-discussion:
-labels: state,foundationdb
-stage: mvp
----
+You're right — one zone covers all 12 rooms. Middleham is small enough that per-room persistence is fragmentation, not scaling.
 
-# RFD 11: State layer — FoundationDB
+**Zonefabric adapted for Crucible:**
 
-## Stack
+```
+cr/zone/0                  -> zstd blob: { world_snapshot }
+cr/player/{pid}/{field}   -> player_t (point lookups for active players)
+cr/tick/{sid}              -> uint64
+```
 
-| Layer | Choice | Rationale |
-|-------|--------|-----------|
-| State | FoundationDB | Ordered key-value store with strict serializable transactions. Schema-free — world state maps naturally to (room, npc, player) keys. |
+One zone (zone 0) = entire Middleham. The zone blob at tick-commit time contains:
+- Room graph (12 rooms, exits, descriptions)
+- NPC state (trust, suspicion, talk_count, marked)
+- Item locations (which room each item is in)
+- Player state (current room, inventory, knowledge)
 
-## Decisions
+For a MUD POC with ~30 total entities across 12 rooms, a single zstd-compressed blob per tick is ~200 bytes. At 64Hz, 200 bytes × 64 = 12.8KB/s write to FDB. One key, one transaction, no range scans needed.
 
-- **FoundationDB over SQL** — FDB's ordered key-value model maps naturally
-  to spatial and inventory state. No schema migrations. Strict serializable
-  isolation without coordinator overhead.
-- **World state as key-value tuples** — each entity type occupies a key
-  prefix, making range scans efficient for tick-wide operations.
-- **Tick counter as a monotonic key** — global tick value stored and
-  incremented atomically per tick.
+Per-entity keys (`cr/player/{pid}/`) exist for point lookups — getting a player's room when they reconnect. The zone blob is the authoritative world state.
 
-## Key prefixes
-
-| Prefix | Content | Description |
-|--------|---------|-------------|
-| `room/` | Room JSON | Room description, exits, items |
-| `npc/`  | NPC JSON | NPC state, trust, knowledge flags |
-| `player/` | Player JSON | Inventory, location, flags |
-| `obj/`  | Object JSON | Item properties, location |
-| `tick/` | int | Global tick counter |
-
-## See also
-
-- **RFD 13**: FDB schema design (full stage — detailed key layout)
-- **RFD 5**: Simulation model (tick counter)
-- **RFD 3**: Transport (libh2o)
-
-## Implementation status
-
-- [x] Stack selected
-- [ ] FDB driver linked
-- [ ] Basic key-value read/write
+This matches Gall's Law: start with the simplest possible model (one zone = whole world), then split into multiple zones only when the world grows beyond what a single zone blob can hold at 64Hz. At 12 rooms that's never going to be a problem for the MUD.
