@@ -1,0 +1,17 @@
+[Unit]
+Description=FoundationDB single-node cluster
+After=network-online.target
+Before=crucible-demo.service
+
+[Container]
+Image=docker.io/foundationdb/foundationdb:7.3.79
+ContainerName=fdb
+Network=host
+
+[Service]
+Restart=always
+TimeoutStartSec=60s
+ExecStartPre=/usr/bin/podman exec fdb sh -c 'echo docker:docker@127.0.0.1:4500 > /var/fdb/fdb.cluster'
+
+[Install]
+WantedBy=default.target
