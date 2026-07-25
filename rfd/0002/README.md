@@ -1,57 +1,39 @@
 ---
 authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
-state: ideation
-discussion:
+state: published
+discussion: https://github.com/taskweft/crucible-rfd/pull/2
 labels: project-definition
 ---
 
-# RFD 2: Crucible — a playable MUD for evaluating LLMs
+# RFD 2: Project definition
 
 ## Problem
 
-LLM evaluation benchmarks saturate quickly and correlate weakly with
-real-world capability. A persistent text-world (MUD) where models act as
-players, navigate a simulated town, build trust with NPCs, and complete
-open-ended objectives offers a harder, more realistic signal.
+Standard LLM benchmarks (MMLU, HumanEval) measure isolated knowledge,
+not persistent social behavior. A MUD where models act as players,
+navigate a town, build NPC trust, and complete open-ended objectives
+offers a harder evaluation signal.
 
 ## Context
 
 CrucibleBench (https://zenodo.org/records/21386663) demonstrates a
-proof-of-concept: 13 models scored over 650 runs in a single-player MUD
-at $99.59 total cost. Medieval town scenario: gain the Watch's trust or
-identify which NPC secretly sides with an antagonist faction.
+proof-of-concept: 13 models, 650 runs, $99.59 total cost. Medieval
+town scenario with a trust/investigation objective. Two operating modes:
+human-playable and LLM evaluation harness.
 
-The user-directed tech stack: **libh2o** (dual-stack HTTP/1.1 + HTTP/3,
-WebSocket, slash-command dispatch), **FoundationDB** (world state
-persistence), **Taskweft** (HTN planner for NPC behavior and scenario
-logic). Discord-style slash commands as the player interface.
+## See also
 
-Without the runtime LLM, the server can run on ~$10/month infrastructure.
-With an LLM backend, it serves as a reproducible evaluation harness.
-
-## Proposal
-
-Build Crucible in two modes:
-
-1. **Human-playable** — Discord-style slash commands over WebSocket.
-   libh2o serves both HTTP/1.1 and HTTP/3. FoundationDB for persistent
-   world state. Taskweft plans NPC responses and scenario progression.
-2. **LLM evaluation harness** — same world, same stack. The game engine
-   logs all state transitions; LLM-as-player is scored by a separate judge.
-
-## Open questions
-
-- FoundationDB schema for world state (rooms, NPCs, player inventory)?
-- Taskweft domain for NPC behavior vs. scenario scripting?
-- Scoring dimensions beyond binary objective completion?
-- Slash command language design for MUD interaction?
-- HTTP/3 vs HTTP/1.1 fallback strategy?
+- **RFD 3**: Tech stack (libh2o, FoundationDB, Taskweft)
+- **RFD 4**: World design and narrative
+- **RFD 5**: Simulation model (ticked)
+- **RFD 6**: Architecture — libh2o, FDB schema, WebSocket
+- **RFD 7**: Slash command protocol
+- **RFD 8**: Taskweft NPC domain
+- **RFD 9**: LLM evaluation scoring protocol
 
 ## Implementation status
 
-- [ ] Game world design document (RFD 4)
-- [ ] FoundationDB schema
-- [ ] Taskweft NPC domain prototype
-- [ ] libh2o WebSocket + slash command handler
+- [x] Project defined
+- [ ] Prototype
 - [ ] Human-playable alpha
 - [ ] LLM evaluation harness
