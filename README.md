@@ -24,7 +24,7 @@ See `PERT_PLAN.md` for the Gall's Law implementation schedule.
 | 0013 | FDB schema — linear-scaling key layout | ideation | full |
 | 0014 | Wire format — bit-crushed binary frames | ideation | full |
 | 0015 | Web client — Discord-like slash commands | ideation | mvp |
-| 0016 | World output (Elixir DSL) | ideation | mvp |
+| 0016 | World output (C structs) | ideation | mvp |
 
 ## Scenarios
 
