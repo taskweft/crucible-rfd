@@ -30,10 +30,11 @@ jobs:
           cmake --build build -j$(nproc)
           sudo -S -p '' cmake --install build
 
-      - name: Build h2o-bench-tpcc
+      - name: Build crucible-demo
         run: |
+          cd h2o-bench-tpcc
           cmake -B build -DCMAKE_BUILD_TYPE=Release -S .
           cmake --build build -j$(nproc)
 
       - name: Verify binary exists
-        run: test -f build/crucible-demo
+        run: test -f h2o-bench-tpcc/build/crucible-demo
