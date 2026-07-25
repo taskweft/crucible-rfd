@@ -3,6 +3,7 @@ authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
 state: ideation
 discussion:
 labels: evaluation
+stage: someday
 ---
 
 # RFD 9: Evaluation scoring

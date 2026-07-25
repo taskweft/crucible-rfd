@@ -3,6 +3,7 @@ authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
 state: committed
 discussion:
 labels: simulation
+stage: mvp
 ---
 
 # RFD 5: Simulation model — 64 Hz ticked

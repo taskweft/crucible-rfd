@@ -3,6 +3,7 @@ authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
 state: ideation
 discussion:
 labels: networking,simulation
+stage: someday
 ---
 
 # RFD 10: Bandwidth allocation for 64 Hz positional updates

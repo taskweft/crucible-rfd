@@ -3,6 +3,7 @@ authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
 state: ideation
 discussion:
 labels: planning
+stage: full
 ---
 
 # RFD 8: Taskweft NPC domain
