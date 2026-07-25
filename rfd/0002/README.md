@@ -9,17 +9,26 @@ labels: project-definition
 
 ## Problem
 
-Standard LLM benchmarks (MMLU, HumanEval) measure isolated knowledge,
-not persistent social behavior. A MUD where models act as players,
-navigate a town, build NPC trust, and complete open-ended objectives
-offers a harder evaluation signal.
+Multi-user dungeons (MUDs) are a compelling game format: text-driven,
+turn-structured, open-ended. But most MUDs are built with ad-hoc scripting
+or state machines that are hard to configure, audit, or reproduce across
+sessions. A well-architected MUD server with deterministic NPC behavior,
+a clean protocol, and replayable scenarios serves two audiences:
+
+- **Primary**: human players who want a persistent, reactive game world.
+- **Secondary**: automated clients — bots, scripted agents, or LLMs —
+  that interact via the same protocol for evaluation or research.
+
+No audience should be treated as an afterthought. The core game loop
+must be playable by humans with zero automation dependencies.
 
 ## Context
 
 CrucibleBench (https://zenodo.org/records/21386663) demonstrates a
 proof-of-concept: 13 models, 650 runs, $99.59 total cost. Medieval
-town scenario with a trust/investigation objective. Two operating modes:
-human-playable and LLM evaluation harness.
+town scenario with a trust/investigation objective. The MUD framework
+underlying that experiment is being formalized here as Crucible — a
+proper game server first, with an optional evaluation harness bolted on.
 
 ## See also
 
@@ -29,11 +38,11 @@ human-playable and LLM evaluation harness.
 - **RFD 6**: Architecture — libh2o, FDB schema, WebSocket
 - **RFD 7**: Slash command protocol
 - **RFD 8**: Taskweft NPC domain
-- **RFD 9**: LLM evaluation scoring protocol
+- **RFD 9**: Evaluation scoring
 
 ## Implementation status
 
 - [x] Project defined
 - [ ] Prototype
 - [ ] Human-playable alpha
-- [ ] LLM evaluation harness
+- [ ] Evaluation harness (optional)

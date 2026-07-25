@@ -20,8 +20,8 @@ labels: tech-stack
 
 - **Ticked simulation** — fixed-rate game loop. Taskweft produces temporal
   plans with ISO 8601 durations; the runtime advances the world on each tick
-  and replans when state diverges. Matches CrucibleBench's discrete turn
-  boundaries.
+  and replans when state diverges. Gives reproducible sessions for both
+  human players and automated clients.
 
 - **Dual-stack HTTP/1.1 + HTTP/3** — WebSocket runs over HTTP/1.1 for
   broad compatibility; HTTP/3 available for low-latency clients.
@@ -29,6 +29,12 @@ labels: tech-stack
 - **FoundationDB over SQL** — FDB's ordered key-value model maps naturally
   to spatial and inventory state. No schema migrations. Strict serializable
   isolation without coordinator overhead.
+
+- **Taskweft over LLM-driven NPCs** — NPC behavior must be deterministic
+  and auditable. LLM-driven NPCs would introduce non-determinism and
+  conflate the evaluator with the environment. Taskweft HTN plans are
+  deterministic, parametrizable, and reproduce identically from the same
+  state. LLMs are never required for NPC logic.
 
 ## Implementation status
 

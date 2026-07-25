@@ -38,6 +38,14 @@ for a given tick. No migration overhead — schema is application-enforced.
 - Server validates, dispatches to Taskweft planner, applies state changes,
   returns narrative text.
 
+### Protocol neutrality
+
+The game protocol is text-over-WebSocket. Any client that speaks WebSocket
+and sends slash commands can play — a terminal telnet wrapper, a browser
+JS client, an IRC bridge, or an automated evaluation harness. The server
+does not distinguish between human and automated players. There is one
+protocol, one set of affordances.
+
 ## Open questions
 
 - Session lifecycle: disposable per-run or persistent across connections?

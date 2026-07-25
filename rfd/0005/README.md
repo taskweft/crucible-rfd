@@ -32,10 +32,10 @@ A tick that exceeds budget queues into the next tick — the simulation
 slows down transparently but never drops work or runs catch-up frames
 that skip ticks.
 
-This matches how CrucibleBench evaluates models: a model has N ticks
-(not wall-clock seconds) to complete the objective. Reproducibility
-follows — same seed, same tick count, same state sequence — regardless
-of the hardware or LLM latency.
+A ticked model gives every participant — human or automated — the same
+deterministic sequence of state transitions from the same inputs. This
+is valuable for human players (fair, understandable) and essential for
+automated evaluation (reproducible, comparable across runs).
 
 ## Why 64 Hz
 
@@ -44,21 +44,25 @@ of the hardware or LLM latency.
   all external noise that the tick loop isolates from world state.
 - **Responsiveness**: At 64 Hz input latency is bounded by
   15.6 ms — well under the 100 ms human-perceptible threshold.
-- **Budget**: Each 15.6 ms tick gives the planner and the LLM a
-  predictable window. Slower planners can run every Nth tick; faster
-  ones run every tick.
+- **Budget**: Each 15.6 ms tick gives the planner a predictable window.
+  Slower planners can run every Nth tick; faster ones run every tick.
 - **Consistency**: The same 64 Hz rate used by Godot physics, common
   dedicated-game-server loops, and the Elixir VR MMOG server. One rate
   across the stack means no translation layers between tick domains.
 
 ## Why not tickless
 
-Tickless (event-driven) evaluation introduces timing artifacts: a model
-that churns many quick actions appears differently from one that thinks
-longer between actions. Wall-clock time is noisy — GC pauses, network
-spikes, and scheduler jitter all add variance. A 64 Hz ticked loop
-removes these confounds: every model gets the same budget measured the
-same way, in ticks.
+Tickless (event-driven) simulation introduces timing artifacts:
+a fast-clicking player advances the world at a different rate from a
+deliberate one. Wall-clock time is noisy — GC pauses, network spikes,
+and scheduler jitter all add variance. A 64 Hz ticked loop removes
+these confounds: every participant, human or automated, gets the same
+budget measured the same way, in ticks.
+
+The system is LLM-capable — the tick rate is fast enough for LLM
+inference per tick — but **must not require an LLM** to function.
+A human player, a scripted bot, or an LLM all advance the same ticks
+at the same deterministic rate.
 
 ## Tick rate comparison
 

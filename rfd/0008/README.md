@@ -2,17 +2,19 @@
 authors: K. S. Ernest (iFire) Lee <fire@users.noreply.github.com>
 state: ideation
 discussion:
-labels: nlp,planning
+labels: planning
 ---
 
 # RFD 8: Taskweft NPC domain
 
 ## Problem
 
-NPC behavior in a ticked evaluation MUD must be deterministic, auditable,
-and parameterizable per scenario. Scripted state machines are too rigid;
-LLM-driven NPCs risk judge contamination. Taskweft HTN planning produces
-deterministic plans from a declarative domain description.
+NPC behavior in a ticked MUD must be deterministic, auditable, and
+parameterizable per scenario. Scripted state machines are too rigid;
+LLM-driven NPCs are non-deterministic, expensive, and conflate the
+test subject with the environment. Taskweft HTN planning produces
+deterministic plans from a declarative domain description — no LLM
+involved.
 
 ## Domain design
 
@@ -27,14 +29,17 @@ Each NPC is a set of actions and methods in a Taskweft domain:
 
 The scenario (e.g., "identify the antagonist") is expressed as goals
 in the domain's `todo_list`. The planner finds a sequence of NPC actions
-that advances the scenario given player actions.
+that advances the scenario given player actions. Because the planner is
+deterministic, the same player inputs always produce the same NPC
+responses — essential for fair gameplay and reproducible evaluation.
 
 ## Properties
 
-Planner produces the same plan for the same state — evaluation is
+Planner produces the same plan for the same state — every run is
 reproducible. Domain parameters (trust thresholds, revelation timing)
 are JSON configuration, not code — scenarios are scriptable without
-recompiling the server.
+recompiling the server. No model inference, no API calls, no LLM
+dependency anywhere in the NPC loop.
 
 ## Open questions
 
