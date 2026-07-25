@@ -1,4 +1,4 @@
-name: CI
+name: crucible-demo
 
 on:
   push:
@@ -12,17 +12,24 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install dependencies
+      - name: Install build deps
         run: |
-          sudo -S -p '' apt-get update -qq
-          sudo -S -p '' apt-get install -y -qq cmake gcc libssl-dev libz-dev make pkg-config
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake gcc libssl-dev libz-dev make pkg-config bc
 
-      - name: Install FoundationDB C client
+      - name: Build wrk
         run: |
-          curl -LsS "https://github.com/apple/foundationdb/releases/download/7.3.79/foundationdb-clients_7.3.79-1_amd64.deb" -o /tmp/fdb.deb
-          sudo -S -p '' dpkg -i /tmp/fdb.deb
+          git clone --depth=1 https://github.com/wg/wrk.git /tmp/wrk
+          cd /tmp/wrk && make -j$(nproc) && sudo cp wrk /usr/local/bin/
 
-      - name: Build H2O (vendored)
+      - name: Install FDB client + server
+        run: |
+          curl -LSs "https://github.com/apple/foundationdb/releases/download/7.3.79/foundationdb-clients_7.3.79-1_amd64.deb" -o /tmp/fdb-client.deb
+          sudo dpkg -i /tmp/fdb-client.deb
+          curl -LSs "https://github.com/apple/foundationdb/releases/download/7.3.79/foundationdb-server_7.3.79-1_amd64.deb" -o /tmp/fdb-server.deb
+          sudo dpkg -i /tmp/fdb-server.deb || sudo apt-get install -f -qqy
+
+      - name: Build h2o (vendored)
         run: |
           cd vendor/h2o
           cmake -B build -DCMAKE_BUILD_TYPE=Release -DWITH_MRUBY=off -DWITH_UV=off -S .
@@ -35,5 +42,54 @@ jobs:
           cmake -B build -DCMAKE_BUILD_TYPE=Release -S .
           cmake --build build -j$(nproc)
 
-      - name: Verify binary exists
-        run: test -f h2o-bench-tpcc/build/crucible-demo
+      - name: Start FoundationDB
+        run: |
+          sudo fdbmonitor --conffile /etc/foundationdb/foundationdb.conf \
+            --lockfile /tmp/fdbmonitor.pid &
+          for i in $(seq 1 30); do
+            if sudo fdbcli --exec "status minimal" --timeout 2 2>/dev/null | grep -q "committed"; then
+              echo "FDB ready after ${i}s"
+              break
+            fi
+            if [ "$i" = "30" ]; then echo "FDB failed to start"; exit 1; fi
+            sleep 1
+          done
+
+      - name: Benchmark 1 worker
+        run: |
+          sudo pkill crucible-demo 2>/dev/null || true
+          sleep 1
+          sudo ./h2o-bench-tpcc/build/crucible-demo -a 1 -c /etc/foundationdb/fdb.cluster &
+          sleep 3
+          wrk -t1 -c8 -d15s http://127.0.0.1:8080/zone?n=200 > /tmp/bench1.txt 2>&1
+          cat /tmp/bench1.txt
+          sudo pkill crucible-demo 2>/dev/null || true
+          grep "Requests/sec" /tmp/bench1.txt | awk '{print $2}' > /tmp/rps1.txt
+
+      - name: Benchmark 2 workers
+        run: |
+          sleep 1
+          sudo ./h2o-bench-tpcc/build/crucible-demo -a 2 -c /etc/foundationdb/fdb.cluster &
+          sleep 3
+          wrk -t2 -c16 -d15s http://127.0.0.1:8080/zone?n=200 > /tmp/bench2.txt 2>&1
+          cat /tmp/bench2.txt
+          sudo pkill crucible-demo 2>/dev/null || true
+          grep "Requests/sec" /tmp/bench2.txt | awk '{print $2}' > /tmp/rps2.txt
+
+      - name: Show scaling ratio
+        run: |
+          RPS1=$(cat /tmp/rps1.txt)
+          RPS2=$(cat /tmp/rps2.txt)
+          RATIO=$(echo "scale=2; $RPS2 / $RPS1" | bc)
+          echo ""
+          echo "=========================================="
+          echo "  Scenario scaling over FoundationDB"
+          echo "  1 worker: $RPS1 zone-ticks/sec"
+          echo "  2 workers: $RPS2 zone-ticks/sec"
+          echo "  Scaling ratio: ${RATIO}x"
+          echo "=========================================="
+          if [ "$(echo "$RATIO < 1.5" | bc)" -eq 1 ]; then
+            echo "FAIL: sub-linear scaling (${RATIO}x, need >= 1.5x)"
+            exit 1
+          fi
+          echo "PASS: linear scaling demonstrated (${RATIO}x)"
