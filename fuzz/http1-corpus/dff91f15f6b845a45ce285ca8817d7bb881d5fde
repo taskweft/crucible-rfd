@@ -1,23 +1,0 @@
-GET /reproxy-test/ind../ex.txt HTTP/1.1
-host: 127.0.0.1:50991
-connec4ion: UpgradeÖÖ,ÖÖ ÖÖÖÖÖGET /echo-headers HTor:
-X-Forwarded-For: ÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖ811
-User-Agent: curl/7.49Öt: */*
-X-Forwarded-For:
-X-Forwarded-For: ÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖ811
-User-Agent: curl/7.49.0-DEV
-Accept: */*
-X-Forwarded-For: ÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖt: */*
-X-Forwarded-For:
-X-Forwarded-For: ÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖapplication/vnd.powerbuilder7ÖÖapplication/vnd.ipld.rawÖÖÖÖÖÖÖÖnÖÖÖÖÖÖÖÖÖÖÖÖÖt: */*
-X-Forwarded-For:
-X-Forwarded-For:ettings: AAMAAABkAAQAAP__
-accept: */*
-user-agent: nghttp2/1:schem
-
-
---MARK--
-PRI * HTTP/2.0
-
-SMÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿnked
-Co¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦ion/x-www-form-url/7.ÿ‹\pÜølÿÿÿÿÿÿpt: */*
