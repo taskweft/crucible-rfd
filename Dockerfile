@@ -7,7 +7,7 @@ RUN apt-get update -qq && apt-get install --no-install-recommends -qqy \
 # Build libh2o from vendored source
 COPY vendor/h2o /tmp/h2o
 RUN cmake -B /tmp/h2o/build -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_C_FLAGS="-flto=auto -march=x86-64-v3 -mtune=generic" \
+      -DCMAKE_C_FLAGS="-flto=auto" \
       -DWITH_MRUBY=off -DWITH_UV=off -S /tmp/h2o && \
     cmake --build /tmp/h2o/build -j$(nproc) && cmake --install /tmp/h2o/build
 
