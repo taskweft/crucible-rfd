@@ -21,10 +21,10 @@ proof-of-concept: 13 models scored over 650 runs in a single-player MUD
 at $99.59 total cost. Medieval town scenario: gain the Watch's trust or
 identify which NPC secretly sides with an antagonist faction.
 
-The user-directed tech stack: **libh2o** (HTTP/2, WebSocket, slash-command
-dispatch), **FoundationDB** (world state persistence), **Taskweft** (HTN
-planner for NPC behavior and scenario logic). Discord-style slash commands
-as the player interface.
+The user-directed tech stack: **libh2o** (dual-stack HTTP/1.1 + HTTP/3,
+WebSocket, slash-command dispatch), **FoundationDB** (world state
+persistence), **Taskweft** (HTN planner for NPC behavior and scenario
+logic). Discord-style slash commands as the player interface.
 
 Without the runtime LLM, the server can run on ~$10/month infrastructure.
 With an LLM backend, it serves as a reproducible evaluation harness.
@@ -33,9 +33,9 @@ With an LLM backend, it serves as a reproducible evaluation harness.
 
 Build Crucible in two modes:
 
-1. **Human-playable** — Discord-style slash commands over WebSocket via
-   libh2o. FoundationDB for persistent world state. Taskweft plans NPC
-   responses and scenario progression.
+1. **Human-playable** — Discord-style slash commands over WebSocket.
+   libh2o serves both HTTP/1.1 and HTTP/3. FoundationDB for persistent
+   world state. Taskweft plans NPC responses and scenario progression.
 2. **LLM evaluation harness** — same world, same stack. The game engine
    logs all state transitions; LLM-as-player is scored by a separate judge.
 
@@ -45,6 +45,7 @@ Build Crucible in two modes:
 - Taskweft domain for NPC behavior vs. scenario scripting?
 - Scoring dimensions beyond binary objective completion?
 - Slash command language design for MUD interaction?
+- HTTP/3 vs HTTP/1.1 fallback strategy?
 
 ## Implementation status
 
@@ -54,4 +55,3 @@ Build Crucible in two modes:
 - [ ] libh2o WebSocket + slash command handler
 - [ ] Human-playable alpha
 - [ ] LLM evaluation harness
-
