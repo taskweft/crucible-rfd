@@ -25,7 +25,7 @@ flowchart LR
     r6 --> r8[RFD 8<br>NPC domain<br>12h]
     r6 --> r11[RFD 11<br>State - FDB<br>linear scaling<br>8h]
     r7 --> r14[RFD 14<br>Wire format<br>10h]
-    r7 --> r16[RFD 16<br>World output<br>4h]
+    r7 --> r16[RFD 16<br>World output<br>Elixir DSL<br>4h]
     r8 --> r9[RFD 9<br>Evaluation<br>8h]
     r8 --> r12[RFD 12<br>Planning - Taskweft<br>8h]
     r11 --> r12
@@ -74,7 +74,7 @@ gantt
 
     section Protocol / Client
     RFD 14 — Wire format (full)   :crit, r14, after r7, 1.5d
-    RFD 16 — World output format  :crit, r16, after r7, 0.5d
+    RFD 16 — World output (Elixir DSL) :crit, r16, after r7, 0.5d
     RFD 15 — Web client           :crit, r15, after r14, 2d
 
     section Evaluation (someday)
@@ -101,7 +101,7 @@ gantt
 | 13 | FDB schema — linear-scaling key layout | 8 | full | — | 11 |
 | 14 | Wire format — bit-crushed | 10 | full | ✓ | 7 |
 | 15 | Web client — Discord-like | 16 | mvp | ✓ | 14, 16 |
-| 16 | World output format | 4 | mvp | ✓ | 7 |
+| 16 | World output (Elixir DSL) | 4 | mvp | ✓ | 7 |
 | | **Total** | **131** | | **53** | |
 
 Critical path (53h): 1 → 2 → 3 → 7 → 14 → 15 (transport/client track).

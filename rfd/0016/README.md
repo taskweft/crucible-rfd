@@ -14,36 +14,78 @@ The server emits narrative text on every tick — room descriptions, NPC
 dialogue, system messages. The client needs to distinguish message
 source and type to render them correctly (tags, colors, layout).
 
-## Format
+## Format — Elixir DSL
 
-Each world output is a structured message with source and body:
+Each world output is an Elixir struct. The `WorldOutput` module defines
+the typed fields; a `WorldOutput.Encoder` protocol handles serialization
+to wire format (RFD 14) and to JSON (for the web client, RFD 15).
 
-| Field | Type | Description |
-|-------|------|-------------|
-| source | enum | `world`, `npc`, `system`, `error` |
-| source_name | string | NPC name or empty (for world/system) |
-| body | string | Narrative text |
-| tags | [string] | Optional: `room_desc`, `dialogue`, `combat`, `event` |
+```elixir
+defmodule Crucible.WorldOutput do
+  @moduledoc """
+  A structured narrative message emitted by the server on each tick.
+  """
 
-### Examples
+  @type source :: :world | :npc | :system | :error
+  @type tag :: :room_desc | :dialogue | :combat | :event | :system
 
-```json
-{"source": "world", "body": "You are in the Town Square. A fountain burbles.",
- "tags": ["room_desc"]}
+  defstruct [:source, :source_name, :body, :tags]
 
-{"source": "npc", "source_name": "Watch Captain",
- "body": "\"Keep your eyes open, stranger.\"",
- "tags": ["dialogue"]}
+  @type t :: %__MODULE__{
+    source: source(),
+    source_name: String.t(),
+    body: String.t(),
+    tags: [tag()]
+  }
 
-{"source": "system", "body": "You pick up the rusty key.",
- "tags": ["event"]}
+  @spec new(source(), String.t(), [tag()]) :: t()
+  def new(source, body, tags \\ []) do
+    %__MODULE__{source: source, source_name: "", body: body, tags: tags}
+  end
 
-{"source": "error", "body": "Unknown command. Try /help."}
+  @spec new(source(), String.t(), String.t(), [tag()]) :: t()
+  def new(source, source_name, body, tags \\ []) do
+    %__MODULE__{source: source, source_name: source_name, body: body, tags: tags}
+  end
+end
+```
+
+The encoder protocol decouples the struct from its wire representation:
+
+```elixir
+defprotocol Crucible.WorldOutput.Encoder do
+  @spec encode(t(), :binary | :json) :: binary()
+  def encode(output, format)
+end
+```
+
+### Examples — struct form
+
+```elixir
+# Room description
+Crucible.WorldOutput.new(:world,
+  "You are in the Town Square. A fountain burbles.",
+  [:room_desc])
+
+# NPC dialogue
+Crucible.WorldOutput.new(:npc, "Watch Captain",
+  ~S("Keep your eyes open, stranger."),
+  [:dialogue])
+
+# System event
+Crucible.WorldOutput.new(:system,
+  "You pick up the rusty key.",
+  [:event])
+
+# Error response
+Crucible.WorldOutput.new(:error,
+  "Unknown command. Try /help.")
 ```
 
 ## Wire encoding
 
-Over the bit-crushed WebSocket (RFD 14), each output frame:
+The `Encoder` protocol's binary implementation produces bit-crushed
+frames (RFD 14):
 
 ```
 uint8   source          — 0=world, 1=npc, 2=system, 3=error
@@ -55,6 +97,13 @@ uint8   tag_count       — number of tags
 for each tag:
   uint8 tag_len
   uint8[tag_len] tag    — UTF-8 tag string
+```
+
+The JSON implementation serializes to:
+
+```json
+{"source": "world", "body": "You are in the Town Square.", "tags": ["room_desc"]}
+{"source": "npc", "source_name": "Watch Captain", "body": "\"Keep your eyes open.\"", "tags": ["dialogue"]}
 ```
 
 ## Client rendering
@@ -73,9 +122,10 @@ The web client (RFD 15) renders each output as a message block:
 
 ## Implementation status
 
-- [ ] Output format defined
-- [ ] Server-side output serializer
-- [ ] Client-side decoder and renderer
+- [ ] Elixir `WorldOutput` struct defined
+- [ ] `WorldOutput.Encoder` protocol with binary implementation
+- [ ] `WorldOutput.Encoder` JSON implementation (web client)
+- [ ] Tick loop emits `WorldOutput.t()` on each tick
 
 ## See also
 
