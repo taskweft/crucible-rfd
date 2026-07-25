@@ -6,7 +6,7 @@ labels: protocol,output
 stage: mvp
 ---
 
-# RFD 16: World output format
+# RFD 16: World output (Elixir DSL)
 
 ## Problem
 
