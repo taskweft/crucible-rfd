@@ -25,7 +25,10 @@ See `PERT_PLAN.md` for the Gall's Law implementation schedule.
 | 0014 | Wire format — bit-crushed binary frames | full |
 | 0015 | Web client — Discord-like slash commands | mvp |
 | 0016 | World output (C structs) | mvp |
+| 0017 | CI/CD pipeline | mvp |
 | 0018 | Zonefabric scaling (reference) | mvp |
+| 0019 | Deployment — Docker + Fly.io | mvp |
+| 0020 | Vendored dependencies | mvp |
 | 0021 | Actor-lite worker pool (reference) | mvp |
 | 0022 | FDB selection (reference) | mvp |
 | 0025 | FDB keyspace design (reference) | mvp |
