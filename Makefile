@@ -1,14 +1,13 @@
 CC      ?= gcc
-CFLAGS  ?= -std=c17 -Wall -Wextra -Wpedantic -O2 -g
-LDFLAGS ?=
-LIBS    ?= -lfdb_c -ldl -lm
+CFLAGS  ?= -std=c17 -Wall -Wextra -Wpedantic -O2 -g -pthread
+LDFLAGS ?= -pthread
+LIBS    ?= -lh2o -lfdb_c -ldl -lm
 
-SRC     := src
-NIF     := $(SRC)/nif
+SRC     := src/bench
 BUILD   := build
-TARGET  := $(BUILD)/crucible
+TARGET  := $(BUILD)/crucible-demo
 
-SRCS    := $(wildcard $(SRC)/*.c) $(wildcard $(NIF)/*.c)
+SRCS    := $(wildcard $(SRC)/*.c)
 OBJS    := $(SRCS:%.c=$(BUILD)/%.o)
 DEPS    := $(OBJS:.o=.d)
 
