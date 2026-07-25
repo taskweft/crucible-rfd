@@ -1,0 +1,94 @@
+name: crucible-demo
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake gcc libssl-dev libyajl-dev libz-dev make pkg-config
+
+      - name: Build libh2o
+        run: |
+          git clone --depth=1 https://github.com/h2o/h2o.git /tmp/h2o
+          cd /tmp/h2o
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DWITH_MRUBY=off -S .
+          cmake --build build -j$(nproc)
+          sudo cmake --install build
+
+      - name: Install FDB client + server
+        run: |
+          curl -LSs "https://github.com/apple/foundationdb/releases/download/7.3.79/foundationdb-clients_7.3.79-1_amd64.deb" -o /tmp/fdb-client.deb
+          sudo dpkg -i /tmp/fdb-client.deb
+          curl -LSs "https://github.com/apple/foundationdb/releases/download/7.3.79/foundationdb-server_7.3.79-1_amd64.deb" -o /tmp/fdb-server.deb
+          sudo dpkg -i /tmp/fdb-server.deb || sudo apt-get install -f -qqy
+
+      - name: Build crucible-demo
+        run: |
+          mkdir -p src/bench
+          [ -f src/bench/main.c ] || cp -r src/bench .
+          make clean && make -j$(nproc)
+
+      - name: Install wrk
+        run: |
+          git clone --depth=1 https://github.com/wg/wrk.git /tmp/wrk
+          cd /tmp/wrk && make -j && sudo cp wrk /usr/local/bin/
+
+      - name: Start FoundationDB
+        run: |
+          sudo fdbmonitor --conffile /etc/foundationdb/foundationdb.conf \
+            --lockfile /tmp/fdbmonitor.pid &
+          for i in $(seq 1 30); do
+            if fdbcli --exec "status minimal" --timeout 2 2>/dev/null | grep -q "committed"; then
+              echo "FDB ready"
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Benchmark 1 worker
+        run: |
+          sudo pkill crucible-demo 2>/dev/null || true
+          sleep 1
+          ./build/crucible-demo -a 1 -c /etc/foundationdb/fdb.cluster -p 8080 &
+          sleep 3
+          wrk -t1 -c8 -d10s http://127.0.0.1:8080/ping > /tmp/bench1.txt 2>&1
+          cat /tmp/bench1.txt
+          sudo pkill crucible-demo 2>/dev/null || true
+          grep "Requests/sec" /tmp/bench1.txt | awk '{print $2}' > /tmp/rps1.txt
+
+      - name: Benchmark 2 workers
+        run: |
+          sleep 1
+          ./build/crucible-demo -a 2 -c /etc/foundationdb/fdb.cluster -p 8081 &
+          sleep 3
+          wrk -t2 -c16 -d10s http://127.0.0.1:8081/ping > /tmp/bench2.txt 2>&1
+          cat /tmp/bench2.txt
+          pkill crucible-demo 2>/dev/null || true
+          grep "Requests/sec" /tmp/bench2.txt | awk '{print $2}' > /tmp/rps2.txt
+
+      - name: Show scaling ratio
+        run: |
+          RPS1=$(cat /tmp/rps1.txt)
+          RPS2=$(cat /tmp/rps2.txt)
+          RATIO=$(echo "scale=2; $RPS2 / $RPS1" | bc)
+          echo ""
+          echo "=========================================="
+          echo "   1 worker: $RPS1 req/s"
+          echo "   2 workers: $RPS2 req/s"
+          echo "   Scaling ratio: ${RATIO}x"
+          echo "=========================================="
+          if [ "$(echo "$RATIO < 1.5" | bc)" -eq 1 ]; then
+            echo "FAIL: 1.5x minimum not met (got ${RATIO}x)"
+            exit 1
+          fi
+          echo "PASS: linear scaling demonstrated (${RATIO}x)"
