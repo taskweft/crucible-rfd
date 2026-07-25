@@ -6,7 +6,7 @@ labels: protocol,output
 stage: mvp
 ---
 
-# RFD 16: World output (Elixir DSL)
+# RFD 16: World output (C structs)
 
 ## Problem
 
@@ -14,78 +14,90 @@ The server emits narrative text on every tick — room descriptions, NPC
 dialogue, system messages. The client needs to distinguish message
 source and type to render them correctly (tags, colors, layout).
 
-## Format — Elixir DSL
+## Format — C struct
 
-Each world output is an Elixir struct. The `WorldOutput` module defines
-the typed fields; a `WorldOutput.Encoder` protocol handles serialization
-to wire format (RFD 14) and to JSON (for the web client, RFD 15).
+Each world output is a C struct. A serializer function table handles
+encoding to bit-crushed binary (RFD 14) and JSON (for the web client,
+RFD 15). The server language is C (see `STACK_DECISION.md`), so the
+output format is a plain struct — no Elixir, no protocol overhead.
 
-```elixir
-defmodule Crucible.WorldOutput do
-  @moduledoc """
-  A structured narrative message emitted by the server on each tick.
-  """
+```c
+typedef enum {
+    WORLD_OUTPUT_SOURCE_WORLD = 0,
+    WORLD_OUTPUT_SOURCE_NPC   = 1,
+    WORLD_OUTPUT_SOURCE_SYSTEM = 2,
+    WORLD_OUTPUT_SOURCE_ERROR = 3,
+} world_output_source_t;
 
-  @type source :: :world | :npc | :system | :error
-  @type tag :: :room_desc | :dialogue | :combat | :event | :system
+typedef enum {
+    WORLD_OUTPUT_TAG_ROOM_DESC   = 0,
+    WORLD_OUTPUT_TAG_DIALOGUE    = 1,
+    WORLD_OUTPUT_TAG_COMBAT      = 2,
+    WORLD_OUTPUT_TAG_EVENT       = 3,
+    WORLD_OUTPUT_TAG_SYSTEM      = 4,
+} world_output_tag_t;
 
-  defstruct [:source, :source_name, :body, :tags]
-
-  @type t :: %__MODULE__{
-    source: source(),
-    source_name: String.t(),
-    body: String.t(),
-    tags: [tag()]
-  }
-
-  @spec new(source(), String.t(), [tag()]) :: t()
-  def new(source, body, tags \\ []) do
-    %__MODULE__{source: source, source_name: "", body: body, tags: tags}
-  end
-
-  @spec new(source(), String.t(), String.t(), [tag()]) :: t()
-  def new(source, source_name, body, tags \\ []) do
-    %__MODULE__{source: source, source_name: source_name, body: body, tags: tags}
-  end
-end
+typedef struct {
+    world_output_source_t source;
+    const char *source_name;       // NPC name (NULL for world/system/error)
+    const char *body;              // Narrative text (UTF-8)
+    const world_output_tag_t *tags; // Tag array
+    size_t tag_count;
+} world_output_t;
 ```
 
-The encoder protocol decouples the struct from its wire representation:
+### Serializer function table
 
-```elixir
-defprotocol Crucible.WorldOutput.Encoder do
-  @spec encode(t(), :binary | :json) :: binary()
-  def encode(output, format)
-end
+A `world_output_serializer` struct decouples the output struct from its
+wire representation — the same pattern as the original Elixir
+`Encoder` protocol, but implemented as a C function pointer table:
+
+```c
+typedef struct {
+    bool (*encode_binary)(const world_output_t *output, uint8_t **buf, size_t *len);
+    char *(*encode_json)(const world_output_t *output);
+    void (*free)(world_output_t *output);
+} world_output_serializer_t;
+
+// Singleton — one serializer table per server instance.
+extern const world_output_serializer_t world_output_serializer;
 ```
 
-### Examples — struct form
+### Constructor helper
 
-```elixir
-# Room description
-Crucible.WorldOutput.new(:world,
-  "You are in the Town Square. A fountain burbles.",
-  [:room_desc])
+```c
+world_output_t world_output_make(world_output_source_t source,
+                                  const char *source_name,
+                                  const char *body,
+                                  const world_output_tag_t *tags,
+                                  size_t tag_count);
+```
 
-# NPC dialogue
-Crucible.WorldOutput.new(:npc, "Watch Captain",
-  ~S("Keep your eyes open, stranger."),
-  [:dialogue])
+### Examples
 
-# System event
-Crucible.WorldOutput.new(:system,
-  "You pick up the rusty key.",
-  [:event])
+```c
+// Room description
+world_output_t out = world_output_make(
+    WORLD_OUTPUT_SOURCE_WORLD, NULL,
+    "You are in the Town Square. A fountain burbles.",
+    (world_output_tag_t[]){WORLD_OUTPUT_TAG_ROOM_DESC}, 1);
 
-# Error response
-Crucible.WorldOutput.new(:error,
-  "Unknown command. Try /help.")
+// NPC dialogue
+out = world_output_make(
+    WORLD_OUTPUT_SOURCE_NPC, "Watch Captain",
+    "\"Keep your eyes open, stranger.\"",
+    (world_output_tag_t[]){WORLD_OUTPUT_TAG_DIALOGUE}, 1);
+
+// System event
+out = world_output_make(
+    WORLD_OUTPUT_SOURCE_SYSTEM, NULL,
+    "You pick up the rusty key.",
+    (world_output_tag_t[]){WORLD_OUTPUT_TAG_EVENT}, 1);
 ```
 
 ## Wire encoding
 
-The `Encoder` protocol's binary implementation produces bit-crushed
-frames (RFD 14):
+The `encode_binary` serializer produces bit-crushed frames (RFD 14):
 
 ```
 uint8   source          — 0=world, 1=npc, 2=system, 3=error
@@ -99,7 +111,7 @@ for each tag:
   uint8[tag_len] tag    — UTF-8 tag string
 ```
 
-The JSON implementation serializes to:
+The `encode_json` serializer produces:
 
 ```json
 {"source": "world", "body": "You are in the Town Square.", "tags": ["room_desc"]}
@@ -115,20 +127,16 @@ The web client (RFD 15) renders each output as a message block:
 - **system** — dim/grey text, prefixed with •
 - **error** — red text
 
-## Open questions
-
-- Should output include rich text (bold, italic) or stay plain?
-- Multi-line body — newlines preserved or wrapped?
-
-## Implementation status
-
-- [ ] Elixir `WorldOutput` struct defined
-- [ ] `WorldOutput.Encoder` protocol with binary implementation
-- [ ] `WorldOutput.Encoder` JSON implementation (web client)
-- [ ] Tick loop emits `WorldOutput.t()` on each tick
-
 ## See also
 
 - **RFD 7**: Slash command protocol
 - **RFD 14**: Wire format — bit-crushed binary frames
 - **RFD 15**: Web client
+- **STACK_DECISION.md**: Full StarVote scoring (C + libh2o won 28/35)
+
+## Implementation status
+
+- [ ] C `world_output_t` struct defined
+- [ ] `world_output_serializer` function table with binary encoder
+- [ ] JSON encoder implementation (web client)
+- [ ] Tick loop emits `world_output_t` on each tick
