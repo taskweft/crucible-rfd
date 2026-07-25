@@ -34,6 +34,6 @@ gantt
 
 ## Stack
 
-- **libh2o** — HTTP/2, WebSocket, slash-command dispatch
+- **libh2o** — dual-stack HTTP/1.1 + HTTP/3, WebSocket, slash-command dispatch
 - **FoundationDB** — world state persistence
 - **Taskweft** — HTN planner for NPC behavior + scenario logic
