@@ -35,13 +35,14 @@ The Watch Captain stands nearby, watching the crowd.
 "You there," the Captain says. "Keep your eyes open. Strangers about."
 ```
 
-For LLM evaluation, the same protocol applies: the LLM client receives
-observation text and sends command text. Evaluation logs capture every
-command-observation pair.
+The same protocol applies to every client — human, scripted bot,
+or automated evaluation harness. The server does not distinguish
+between connection types. Evaluation logs capture every
+command-observation pair for replay and scoring.
 
 ## Implementation status
 
 - [x] Command set defined
 - [ ] Protocol documentation
 - [ ] Command parser
-- [ ] LLM client adapter
+- [ ] Automated client adapter

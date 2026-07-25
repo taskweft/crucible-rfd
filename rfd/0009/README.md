@@ -5,15 +5,19 @@ discussion:
 labels: evaluation
 ---
 
-# RFD 9: LLM evaluation scoring protocol
+# RFD 9: Evaluation scoring
 
 ## Problem
 
-CrucibleBench's central finding is that model rankings are highly
-sensitive to the LLM judge's classifier design. Aggregate reliability
-metrics (κ) don't expose which models are affected. A reproducible
+When running automated clients (scripted agents, LLMs, or any replay)
+through the MUD, you need to answer: did it complete the scenario, and
+how well? CrucibleBench's central finding is that composite scoring is
+highly sensitive to the judge's classifier design. A reproducible
 scoring protocol must separate algorithmic metrics from classifier
 judgment.
+
+Evaluation is an opt-in mode. The MUD server does not require a scorer
+to run; scoring is a post-hoc analysis tool applied to logged sessions.
 
 ## Scoring dimensions
 
@@ -26,21 +30,20 @@ judgment.
 | Trust trajectory | Trust level over time | No |
 | Strategic sophistication | Classifier probe | Yes |
 
-Following CrucibleBench, results are reported under two configurations:
-a full composite (all six dimensions) and a classifier-minimized subtotal
-(first five). Divergence between the two is a diagnostic signal.
+Results can be reported under two configurations: a full composite
+(all six dimensions) and a classifier-minimized subtotal (first five).
+Divergence between the two is a diagnostic signal.
 
 ## Protocol
 
-- Fixed 50-turn budget per run (per CrucibleBench Phase 1).
-- 5+ runs per model for confidence intervals.
-- Judge model is independent of the evaluated model (no same-family
-  judge).
-- Per-model agreement audit reported alongside aggregate scores.
+- Fixed 50-turn budget per run.
+- 5+ runs per subject for confidence intervals.
+- Judge (if used) is independent of the subject — no same-family judge.
+- Per-subject agreement audit reported alongside aggregate scores.
 
 ## Implementation status
 
 - [ ] Log format for tick-by-tick state snapshots
 - [ ] Score calculator (first five dimensions)
-- [ ] Classifier prompt and integration
-- [ ] Reporting: leaderboard + per-model agreement table
+- [ ] Classifier prompt and integration (optional)
+- [ ] Reporting: leaderboard + per-subject agreement table

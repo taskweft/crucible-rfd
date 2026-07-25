@@ -1,6 +1,7 @@
 # crucible-rfd
 
-RFDs for the Crucible project — a playable MUD for evaluating LLMs.
+RFDs for the Crucible project — a playable MUD with deterministic NPCs,
+optional automated evaluation, and an LLM-capable evaluation mode.
 
 | RFD | Title | State |
 |-----|-------|-------|
@@ -11,6 +12,6 @@ RFDs for the Crucible project — a playable MUD for evaluating LLMs.
 | 0006 | Architecture — libh2o, FDB schema, WebSocket | ideation |
 | 0007 | Slash command protocol | ideation |
 | 0008 | Taskweft NPC domain | ideation |
-| 0009 | LLM evaluation scoring protocol | ideation |
+| 0009 | Evaluation scoring | ideation |
 
 See `rfd/XXXX/README.md` for each document.

@@ -4,7 +4,7 @@ authors:
   - family-names: Lee
     given-names: "K. S. Ernest"
     alias: fire
-title: "crucible-rfd — RFDs for the Crucible MUD-based LLM evaluation framework"
+title: "crucible-rfd — RFDs for the Crucible MUD"
 version: 0.1.0
 date-released: 2026-07-24
 url: "https://github.com/taskweft/crucible-rfd"
